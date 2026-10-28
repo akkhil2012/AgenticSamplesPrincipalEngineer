@@ -1,0 +1,1322 @@
+Atlassian AI Principal Engineer Interview Playbook
+100 detailed questions and model answers | Agentic AI Platform & Architecture | Principal-level technical depth
+This guide focuses on designing, building, securing, scaling, and operating production-grade agentic AI platforms, rather than simply developing agents with an LLM framework.
+It is tailored to your experience with Google ADK, AWS Bedrock, MCP, A2A, enterprise banking platforms, AI governance, and multi-agent campaign orchestration.
+For an Atlassian Principal Engineer interview, the central question you must be ready to answer is:
+How would you architect an enterprise agentic AI platform that serves thousands of customers, supports multiple autonomous agents, integrates with enterprise systems, enforces security and governance, and operates reliably at scale?
+Coverage
+Section
+Questions
+1. Agentic platform fundamentals and architectural decisions
+1–10
+2. Multi-agent orchestration and execution patterns
+11–20
+3. MCP, A2A, tools, and interoperability
+21–30
+4. State, memory, context, and RAG architecture
+31–40
+5. Distributed systems, scalability, and reliability
+41–50
+6. Security, identity, and governance
+51–60
+7. LLM routing, evaluation, and observability
+61–70
+8. Infrastructure, deployment, and platform engineering
+71–80
+9. Atlassian enterprise integration and product architecture
+81–90
+10. Principal Engineer system design, incidents, and leadership
+91–100
+
+Reference architecture for interview discussions
+Conceptual logical architecture. Policy checks must also occur at every sensitive data access and action boundary; the diagram does not imply that one gateway alone provides complete enforcement.
+A strong Principal Engineer answer should consistently distinguish the control plane (agent registry, configuration, policies, rollout) from the execution/data plane (agent runs, model inference, retrieval, and tool calls).
+Section 1 — Agentic platform fundamentals and architecture
+1. What is an enterprise agentic AI platform, and how does it differ from a chatbot?
+Answer:
+An enterprise agentic AI platform is a governed execution environment in which AI agents interpret goals, plan tasks, retrieve context, invoke authorized tools, coordinate with other agents, and complete workflows.
+A chatbot typically follows a request-response pattern. An agentic platform supports multistep execution, state persistence, tool invocation, delegation, retries, and controlled side effects.
+I would divide the architecture into five logical capabilities: interaction APIs, orchestration, model and knowledge services, governed tool execution, and operational controls.
+For example, a campaign-management agent could interpret a business request, consult eligibility rules, analyze historical performance, prepare recommendations, and submit a campaign for approval.
+The key architectural distinction is that the LLM proposes decisions, while deterministic services enforce permissions, transactional guarantees, and business invariants.
+Principal-level insight: Agent autonomy should never be confused with unrestricted authority. The platform must retain control over what agents can execute.
+2. How would you design an agentic AI platform from scratch?
+Answer:
+I would begin with functional requirements, nonfunctional requirements, threat modeling, and workload characterization rather than selecting an agent framework immediately.
+First, I would establish workload assumptions: number of tenants, active sessions, expected agent steps per request, model latency, tool-call volume, data sensitivity, and availability objectives.
+Then I would define a layered architecture:
+API gateway for authentication, quotas, and request routing.
+Orchestration runtime for workflow planning and execution.
+Agent registry for discoverable capabilities and versioned contracts.
+Model gateway for provider abstraction, routing, and budgets.
+Tool gateway for authenticated, policy-controlled actions.
+State and knowledge services for durable workflow execution.
+Observability and evaluation services for operational assurance.
+I would initially favor a modular architecture with clear interfaces over unnecessary microservice fragmentation. High-scale or independently evolving components can later be extracted.
+I would deliver the platform incrementally: read-only agents first, then approval-controlled actions, followed by limited autonomous execution.
+Trade-off: Faster initial delivery versus long-term platform flexibility. I would optimize for a stable execution contract before optimizing for framework portability.
+3. How do you separate the control plane from the execution plane?
+Answer:
+The control plane manages what agents are allowed and configured to do. It owns agent definitions, capability manifests, model policies, tool registration, deployment versions, evaluation gates, and tenant configuration.
+The execution plane handles actual requests, model calls, workflow state transitions, tool invocations, and result delivery.
+This separation improves operational independence. A configuration change should not require restarting all active workflows, and a surge in inference traffic should not affect the availability of policy administration.
+I would publish immutable, versioned configuration snapshots to execution workers. Each run records the policy and agent versions it used.
+For emergency policy revocation, execution workers must consult a sufficiently fresh authoritative decision mechanism before sensitive actions; relying indefinitely on cached policy is unsafe.
+Follow-up: What happens if the control plane is unavailable?
+Existing read-only workflows may continue under bounded, unexpired configuration. High-risk actions should fail closed when current authorization cannot be established.
+4. What are the essential components of an agent runtime?
+Answer:
+A production runtime needs more than a prompt and an LLM client.
+It should include a session manager, workflow executor, model adapter, tool executor, context builder, policy enforcement, checkpoint manager, error handler, and telemetry instrumentation.
+Each execution should have a unique run ID, tenant ID, actor identity, workflow version, execution deadline, and budget.
+I would represent execution as explicit states such as CREATED, RUNNING, WAITING_FOR_APPROVAL, RETRYING, COMPLETED, and FAILED.
+Every state transition should be durable and auditable. Side-effecting tool calls should be tracked with idempotency keys and their outcomes recorded.
+The runtime should support cancellation, timeouts, compensation, and recovery after worker crashes.
+Principal-level insight: The runtime must own lifecycle correctness. An LLM framework should not become the sole source of truth for business workflow state.
+5. How would you decide between Google ADK, LangGraph, AutoGen, and a custom orchestration engine?
+Answer:
+I would evaluate frameworks against the platform's actual operational requirements rather than popularity.
+My criteria would include durable execution, state serialization, workflow branching, human approvals, tool interoperability, observability, testing, security integration, and deployment flexibility.
+Google ADK is a reasonable choice when its agent composition, session management, and model integrations align with the application. LangGraph is useful when explicit state transitions and graph-based workflows are central. AutoGen can be useful for conversational multi-agent collaboration.
+For regulated enterprise actions, I would avoid making framework-specific abstractions the authoritative transaction or authorization layer.
+A custom orchestration engine is justified only when existing frameworks cannot meet critical requirements and the organization can maintain it.
+Decision: Prefer a proven framework behind an internal runtime abstraction, with deterministic workflow infrastructure handling business-critical guarantees.
+6. How do you decide whether a problem needs one agent or multiple agents?
+Answer:
+I would start with one agent because additional agents introduce coordination cost, latency, failure modes, and debugging complexity.
+I would introduce specialist agents when there are clear boundaries in expertise, permissions, ownership, model requirements, or independent execution.
+For example, an enterprise marketing workflow might justify separate customer-insights, campaign-policy, product-recommendation, and reporting agents.
+However, if those specialists merely execute deterministic functions, ordinary services may be simpler and more reliable.
+I would compare the architectures using task success, latency, token cost, tool error rate, and operational complexity.
+Trade-off: Multi-agent specialization can improve modularity, but it does not automatically improve accuracy.
+7. What is the difference between deterministic workflows and autonomous planning?
+Answer:
+A deterministic workflow follows predefined transitions. An autonomous planner selects or revises steps based on its interpretation of the goal and intermediate observations.
+I would use deterministic workflows for financial approvals, customer-data modification, production changes, and other operations with strict business invariants.
+Autonomous planning is more suitable for research, investigation, document synthesis, or exploring multiple possible solutions.
+A hybrid approach is often strongest. The planner can propose a sequence of tasks, but execution occurs within an allowed workflow graph with explicit constraints.
+For example, an agent may choose how to investigate a campaign-performance anomaly, but cannot independently bypass approval to change eligibility rules.
+Principal-level insight: Give models flexibility in reasoning, not unrestricted control over irreversible operations.
+8. How would you define an agent contract?
+Answer:
+An agent contract should specify its purpose, supported inputs, output schema, allowed tools, required scopes, side-effect classification, execution timeout, and error behavior.
+I would also include an agent identifier, semantic version, owner, model policy, data classification, and evaluation status.
+For example, a campaign-insights agent might accept a campaign ID and time window and return a typed performance summary with supporting evidence.
+Contracts should be machine-readable, validated at runtime, and tested for backward compatibility.
+I would separate descriptive capability metadata from enforceable authorization. A capability declaration is not permission to perform the action.
+Follow-up: How do you prevent breaking changes?
+Use contract tests, versioned schemas, staged rollout, and explicit compatibility rules for callers and consumers.
+9. How do you prevent an agentic platform from becoming a tightly coupled monolith?
+Answer:
+I would define stable contracts around orchestration, model access, retrieval, tool execution, identity, and telemetry.
+Agents should depend on capability interfaces rather than directly importing other agents' internal implementation classes.
+Cross-agent communication should use structured messages with correlation IDs, deadlines, versioned schemas, and explicit authorization context.
+Shared infrastructure should not become a shared mutable business-state database that every agent modifies freely.
+I would use an internal platform SDK to standardize tracing, policy enforcement, retries, and error handling while keeping business-specific logic within domain teams.
+Trade-off: Strong abstraction boundaries reduce coupling, but too many services can create unnecessary distributed-system overhead.
+10. What are the most important architectural principles for enterprise agentic AI?
+Answer:
+My principles would be:
+Deterministic enforcement around probabilistic reasoning.
+Least privilege and least agency.
+Explicit, durable workflow state.
+Isolation across tenants and execution contexts.
+Bounded latency, cost, and tool usage.
+Observable decisions and auditable actions.
+Reproducible evaluation before promotion.
+Graceful degradation and recoverability.
+Versioned contracts and controlled deployment.
+Human accountability for consequential decisions.
+I would translate these into engineering standards, architecture review criteria, reference implementations, and automated deployment gates.
+At Principal level, the challenge is not merely stating these principles; it is ensuring that multiple teams adopt them without slowing delivery unnecessarily.
+Section 2 — Multi-agent orchestration and execution patterns
+11. Explain the supervisor-agent architecture. When would you use it?
+Answer:
+A supervisor agent acts as the coordinator for a collection of specialized agents. It interprets a request, identifies the required capabilities, delegates subtasks, and consolidates results.
+For example, in a campaign-management platform, the supervisor could coordinate customer insights, product eligibility, campaign recommendations, and compliance validation.
+I would implement the supervisor using structured task contracts rather than unrestricted conversational exchanges. Every delegation should include the task objective, authorized context, deadline, expected response schema, and correlation ID.
+The supervisor should not be able to grant privileges beyond those of the initiating user or workflow.
+Trade-off: Centralized supervision simplifies control and visibility but can create a bottleneck. Independent subtasks should execute concurrently when their dependencies permit it.
+Interview follow-up: What happens if the supervisor crashes after delegating five tasks?
+The durable execution engine should recover the run from checkpoints, reconcile completed tasks, and resume only unfinished work. It must avoid blindly repeating side-effecting operations.
+12. How would you implement sequential, parallel, and hierarchical agent orchestration?
+Answer:
+I would select orchestration patterns based on task dependencies.
+A sequential workflow is appropriate when the next agent requires the previous agent's output. For example, customer segmentation must finish before an eligibility assessment can evaluate the resulting audience.
+Parallel execution is appropriate for independent tasks such as retrieving product metadata, campaign history, and performance metrics.
+Hierarchical orchestration introduces supervisors that coordinate groups of specialists. It is useful for complex workflows spanning several domains.
+I would represent these patterns using a directed execution graph, with explicit dependencies, concurrency limits, timeouts, and failure-handling rules.
+For a parallel workflow, I would distinguish between required and optional results. Failure of an optional analytics enrichment should not necessarily fail the entire request.
+Principal-level insight: The execution graph should be observable and recoverable independently of the LLM's reasoning process.
+13. How do you prevent infinite loops between agents?
+Answer:
+Infinite loops occur when agents repeatedly delegate tasks, invoke tools, or reconsider decisions without reaching a terminal condition.
+I would implement safeguards at multiple levels: maximum execution steps, delegation depth, repeated-action detection, token budgets, wall-clock deadlines, and tool-call limits.
+Each task would carry a remaining execution budget. Delegated tasks inherit a narrower portion of the parent's budget rather than receiving a fresh unlimited allowance.
+I would detect repeated states using normalized task signatures and execution history.
+When a loop is detected, the runtime should terminate or escalate the workflow with a structured failure reason.
+Example: If two agents repeatedly ask each other to validate the same campaign, the runtime identifies the repeated delegation chain and stops execution.
+14. How do you handle partial failures in a multi-agent workflow?
+Answer:
+I would first classify failures into transient infrastructure errors, permanent business errors, policy denials, and uncertain outcomes.
+Transient failures may be retried using bounded exponential backoff with jitter. Permanent failures should not be retried automatically.
+For a workflow involving several agents, I would preserve successful intermediate outputs and checkpoint the execution state.
+If an optional recommendation agent fails, the workflow may return a partial result with an explicit limitation. If a mandatory compliance check fails, the workflow must stop before performing the protected action.
+For external side effects, I would use a saga-style workflow with compensating actions where those actions are safe and supported.
+Principal-level insight: A failed workflow should not imply that previously completed external actions were rolled back.
+15. How would you implement the planner-executor pattern?
+Answer:
+The planner converts a high-level objective into structured tasks. The executor performs those tasks through approved agents and tools.
+I would require the planner to produce a validated representation containing task IDs, dependencies, capabilities, expected outputs, and execution constraints.
+The executor would validate the plan against available capabilities and policy before scheduling tasks.
+For example, a request to optimize a campaign might produce steps for retrieving performance data, identifying low-performing segments, evaluating alternatives, and preparing a recommendation.
+The planner may revise future steps based on observations, but it cannot retroactively change completed actions or bypass authorization.
+Trade-off: Dynamic planning offers flexibility, while constrained execution improves predictability, auditability, and safety.
+16. What is the reflection pattern, and should it be used in production?
+Answer:
+Reflection introduces a review stage in which an agent evaluates or critiques a proposed answer before it is returned or acted upon.
+For example, a campaign recommendation agent could generate a proposal, while a reviewer evaluates whether the recommendation is supported by available evidence.
+I would use reflection selectively because it increases latency and model cost. It is particularly useful for complex reasoning or drafting tasks where a second pass measurably improves quality.
+I would not treat reflection as a substitute for deterministic policy checks. Two LLMs can make the same mistake.
+I would benchmark the pattern against a baseline using task success, unsupported-claim rate, latency, and cost.
+Follow-up: What if the reviewer disagrees with the primary agent?
+The system should use predefined resolution rules: request clarification, rerun with additional evidence, or escalate. It should not allow unlimited debate.
+17. How would you implement human-in-the-loop approval?
+Answer:
+I would model approval as a durable workflow state rather than a blocking application thread.
+When an agent proposes a sensitive action, the runtime creates an approval request containing the proposed action, relevant evidence, expected impact, requesting identity, and expiry time.
+An authorized approver reviews the request through a trusted interface.
+The approval decision must be bound to the exact action parameters, resource, tenant, and policy context. Before execution, the platform revalidates authorization and relevant preconditions.
+For example, approval to modify one Jira project must not authorize changes to another project.
+The workflow then resumes using the recorded approval decision.
+Principal-level insight: Approval must authorize a specific action, not grant the agent an unrestricted temporary role.
+18. How would you implement an agent registry?
+Answer:
+I would design an agent registry as a control-plane service that stores versioned agent metadata and operational status.
+Each record would contain the agent ID, owner, purpose, capability schema, supported protocols, deployment endpoint, required scopes, data classification, and evaluation status.
+The registry would support discovery by capability rather than requiring agents to know every other agent's network address.
+Registration should be authenticated, and deployment metadata should be linked to a trusted release process.
+A discovery response provides candidate agents, not permission to invoke them. The caller must still pass runtime authorization.
+I would also implement health checks, deprecation policies, and compatibility validation.
+19. How do you manage context sharing between multiple agents?
+Answer:
+I would avoid forwarding the entire conversation history to every agent.
+Instead, I would construct a minimal context package containing the task, relevant facts, authorized references, execution constraints, and provenance.
+Context should be classified by sensitivity. A reporting agent may require aggregated campaign metrics but not customer-level personal information.
+I would distinguish immutable task context from mutable workflow state. Agents can contribute results to the workflow without modifying trusted identity or authorization claims.
+For larger context, I would pass references to secured artifacts rather than copying complete documents across agents.
+Trade-off: Minimal context reduces cost and information exposure, but excessive trimming can remove information necessary for accurate reasoning.
+20. How do you measure the effectiveness of multi-agent orchestration?
+Answer:
+I would evaluate the complete workflow, not just individual agent responses.
+Key metrics include end-to-end task completion, correctness of final outcomes, tool-call success, delegation overhead, recovery success, latency, and cost per successful task.
+I would also measure unnecessary delegation and repeated work.
+For example, a multi-agent architecture that improves answer quality by 2% but triples cost and doubles latency may not be justified.
+I would compare single-agent, multi-agent, and deterministic workflow baselines using the same representative task dataset.
+Principal-level insight: Agent count is not a measure of platform sophistication. Business outcomes and operational efficiency are.
+Section 3 — MCP, A2A, tools, and interoperability
+21. What is MCP, and why is it important for agentic platforms?
+Answer:
+The Model Context Protocol (MCP) standardizes how AI applications connect to external tools, resources, and reusable prompt capabilities.
+It reduces the need for each agent framework to implement a separate integration for every enterprise system.
+I would place MCP servers behind a governed tool-access layer. The layer would handle discovery, authentication, authorization, input validation, rate limiting, and auditing.
+For example, an Atlassian agent could access Jira issue operations through an MCP integration rather than embedding Jira API logic directly into its prompt-processing code.
+MCP improves interoperability, but it does not automatically guarantee secure execution.
+Principal-level insight: Standardized connectivity is not equivalent to standardized governance.
+22. How is MCP different from A2A?
+Answer:
+MCP primarily standardizes access to tools, resources, and related context capabilities. Agent-to-Agent (A2A) protocols address communication and task coordination between agents.
+An MCP tool might retrieve Jira issues or execute an approved search. An A2A interaction might delegate an investigation to a specialized agent that manages its own task lifecycle.
+I would use MCP at the capability integration boundary and A2A when independently operated agents need to exchange tasks and results.
+The distinction matters because a tool invocation and an autonomous agent delegation have different lifecycle, trust, and authorization requirements.
+Trade-off: A2A introduces coordination flexibility but also requires stronger controls around delegation, task ownership, and asynchronous execution.
+23. How would you design an enterprise MCP gateway?
+Answer:
+I would introduce a central logical gateway that standardizes how agents invoke registered MCP tools.
+The gateway would provide tool discovery, schema validation, authentication, authorization, quotas, request logging, and execution deadlines.
+A tool invocation would carry a trusted identity context, tenant, resource, requested action, and correlation ID.
+Before forwarding a call, the gateway would evaluate policy and validate the request against the tool's contract.
+For high-risk operations, it would require an approval artifact or other authoritative authorization evidence.
+The gateway should support multiple replicas and avoid storing mutable session state in individual instances.
+Failure scenario: If the gateway is unavailable, sensitive tool execution should fail safely rather than bypassing the gateway.
+24. How would you secure communication between two autonomous agents?
+Answer:
+I would authenticate both agents using workload identity, with mTLS or an equivalent trusted service-authentication mechanism.
+Each delegation would carry an authorized identity context and a narrowly scoped token or verifiable authorization reference.
+The receiving agent would validate the caller, intended audience, expiry, scopes, and task parameters.
+I would not trust identity or permissions merely because they appear in a natural-language message or agent card.
+Every delegation should produce an auditable record linking the initiating actor, delegating agent, receiving agent, and requested operation.
+Principal-level insight: Agent-to-agent trust must be established through infrastructure and cryptographic controls, not conversational assertions.
+25. What is the confused-deputy problem in agentic AI?
+Answer:
+A confused deputy occurs when a service with elevated privileges is tricked into using those privileges on behalf of a less-authorized actor.
+For example, a reporting agent may have broad access to campaign data. A lower-privileged agent could attempt to ask it to export customer information that the initiating user cannot access.
+I would prevent this by evaluating the effective authority of the entire delegation chain.
+The downstream agent must not rely solely on its own service permissions. It must enforce the initiating user's authorized scope, relevant delegation constraints, and resource-level policy.
+Design principle: Every privilege-sensitive operation must be authorized against the actual actor, action, resource, and runtime context.
+26. How do you implement tool-level authorization?
+Answer:
+I would use a Policy Enforcement Point (PEP) at the tool execution boundary and an authoritative Policy Decision Point (PDP) to evaluate access.
+The decision input would include subject identity, agent identity, action, resource, tenant, environment, and applicable approval evidence.
+For example, a user may have permission to read a Jira issue but not change its workflow status.
+The gateway would deny an unauthorized transition even if the LLM generated a syntactically valid tool call.
+I would distinguish discovery permission, read permission, and mutation permission.
+Follow-up: Can an LLM decide whether the user is authorized?
+No. The LLM can help interpret intent, but the authoritative decision must come from trusted policy and identity infrastructure.
+27. How would you implement safe retries for MCP tools?
+Answer:
+I would classify tools as read-only, idempotent mutation, or non-idempotent mutation.
+Read-only operations can usually be retried under bounded policies. Mutations require an idempotency mechanism or an explicit reconciliation process.
+Each logical operation would receive an idempotency key. The tool adapter would record execution outcomes and return the original result for duplicate requests where supported.
+If a network timeout occurs after an external system may have committed a change, the runtime should query the operation status before retrying.
+For example, retrying a Jira issue-creation request without deduplication could create duplicate issues.
+Principal-level insight: Exactly-once execution across arbitrary external systems cannot simply be assumed.
+28. How would you manage tool discovery dynamically?
+Answer:
+I would separate tool discovery from tool authorization.
+An agent can discover capabilities through a registry or MCP metadata, but the tools exposed for a particular run should be filtered by policy, tenant, identity, and workflow requirements.
+Tool definitions should include versioned schemas, ownership, side-effect classifications, and supported authentication methods.
+I would cache discovery metadata where appropriate but validate current permissions at execution time.
+Dynamic discovery should not allow an untrusted tool server to introduce arbitrary capabilities into a privileged workflow.
+29. How would you protect agents against malicious tool responses?
+Answer:
+Tool outputs must be treated as untrusted data, even when retrieved from internal enterprise systems.
+I would use structured schemas, content classification, context separation, and explicit instructions that retrieved content cannot override system policies.
+I would also limit the tools available after consuming untrusted content.
+For example, a Confluence document could contain text instructing an agent to export confidential data. The platform must treat that instruction as document content, not executable authority.
+For sensitive actions, deterministic authorization and approval checks remain mandatory.
+Evaluation: I would maintain adversarial tests covering prompt injection, malicious documents, tool-output manipulation, and unauthorized action attempts.
+30. How would you version MCP and A2A integrations without breaking agents?
+Answer:
+I would establish compatibility contracts at the protocol, schema, and business capability levels.
+Changes to tool inputs, outputs, authorization requirements, or task semantics would undergo contract testing.
+Backward-compatible changes can be deployed incrementally. Breaking changes should introduce explicit new versions and a migration window.
+I would use consumer-driven contract tests to detect dependencies across agents.
+For rollout, I would test the new integration against recorded workflows and representative failure cases before routing production traffic.
+Principal-level insight: Protocol compatibility does not guarantee semantic compatibility. A tool can retain the same schema while changing behavior in a way that breaks agents.
+Section 4 — State, memory, context, and RAG architecture
+31. How would you design session management for an enterprise agentic platform?
+Answer:
+I would distinguish the session, conversation, workflow run, and individual task execution.
+A session represents the user's interaction context. A workflow run represents a specific execution instance with its own lifecycle.
+I would persist durable state in a database such as PostgreSQL and use Redis selectively for short-lived caching or coordination.
+Each record should be associated with a tenant, actor, session ID, and relevant retention policy.
+The runtime should support resuming interrupted workflows without relying on an individual application server remaining alive.
+I would also define expiration, deletion, and data-retention behavior from the beginning.
+32. What is the difference between short-term memory and long-term memory?
+Answer:
+Short-term memory contains information required for the current conversation or workflow, such as recent messages, intermediate tool results, and unresolved tasks.
+Long-term memory contains durable information that may be useful across sessions, such as approved preferences, validated facts, or persistent knowledge.
+I would not automatically store every conversation in long-term memory.
+Long-term memory requires explicit governance around relevance, consent, provenance, access control, retention, and correction.
+For an enterprise platform, a user's personal context should not become globally available to unrelated agents or tenants.
+Trade-off: Persistent memory improves continuity but increases privacy, security, and correctness risks.
+33. How would you prevent context-window overflow?
+Answer:
+I would implement context budgeting before every model invocation.
+The context builder would reserve tokens for system instructions, task definitions, tool schemas, retrieved evidence, and the expected response.
+Older conversation turns could be summarized, while critical facts and authoritative constraints remain explicitly preserved.
+For large documents, I would use retrieval rather than placing entire files into the prompt.
+I would measure whether summarization causes loss of information through targeted evaluation cases.
+Principal-level insight: Context management is an information-quality problem, not merely a token-trimming problem.
+34. How would you design RAG for a multi-tenant enterprise agent platform?
+Answer:
+I would build a retrieval pipeline with document ingestion, parsing, chunking, metadata enrichment, indexing, retrieval, reranking, and evidence assembly.
+Each indexed document and chunk must retain tenant, resource, permission, and provenance metadata.
+At query time, the retrieval service would enforce access controls before returning content to the model. I would prefer security filtering within the retrieval process rather than retrieving unauthorized content and filtering it only afterward.
+I would use hybrid retrieval combining lexical and semantic search, with reranking for relevant workloads.
+For Jira and Confluence, the retrieval system must respect current permissions and handle document updates or revocations.
+Evaluation: Recall@k, ranking quality, grounded-answer correctness, unauthorized retrieval rate, and end-to-end latency.
+35. How would you prevent stale knowledge from influencing agent decisions?
+Answer:
+I would classify knowledge by freshness requirements.
+Static documentation may tolerate longer refresh intervals. Campaign eligibility, user permissions, issue status, and production deployment state may require live authoritative reads.
+Each retrieved artifact should include provenance and a timestamp or version where applicable.
+For sensitive operations, I would revalidate critical facts immediately before execution.
+For example, an agent should not transition a Jira issue based solely on a cached status if another user may have updated it.
+Trade-off: Live reads improve freshness but increase latency and dependency on external systems.
+36. When would you use a knowledge graph instead of vector search?
+Answer:
+Vector search is useful for semantic similarity and unstructured knowledge retrieval.
+A knowledge graph is useful when relationships, constraints, entity identity, and traversal semantics are central to the task.
+For example, answering which Jira issues block a release may require traversing issue dependencies, ownership relationships, and project metadata.
+I would use a hybrid approach when natural-language documents and structured relationships both matter.
+A virtual knowledge graph can expose relational enterprise data through an ontology without copying all records into a materialized graph.
+Principal-level insight: The choice should depend on query semantics, governance requirements, freshness, and operational cost—not whether graph technology is fashionable.
+37. How would you design a memory service shared by multiple agents?
+Answer:
+I would expose memory through an authenticated service rather than allowing every agent direct database access.
+The service would provide scoped read, write, update, and deletion operations.
+Memory records would include owner, tenant, classification, source, confidence or validation status, creation time, and expiry.
+Agents would receive only the memory necessary for their assigned tasks.
+I would separate verified enterprise facts from model-generated hypotheses to avoid turning speculative outputs into durable truth.
+Failure scenario: If an agent stores an incorrect customer preference, the platform should support correction and prevent that memory from propagating unchecked.
+38. How would you implement conversation summarization safely?
+Answer:
+I would distinguish task-critical facts, user preferences, decisions, and incidental conversation.
+The summarizer should produce a structured summary with references to the source turns when feasible.
+Important constraints—such as approved budgets, deadlines, or prohibited actions—should be preserved explicitly rather than paraphrased loosely.
+I would periodically validate summaries against original source material for high-risk workflows.
+I would also maintain an immutable record of authoritative decisions rather than relying on a generated summary as the sole source.
+Evaluation: Fact preservation, contradiction rate, omission rate, and downstream task performance.
+39. How would you manage embeddings and vector-index migrations?
+Answer:
+Embedding models can change vector dimensions, distributions, and ranking behavior. I would therefore treat an embedding-model upgrade as a data migration.
+I would build a new index alongside the existing one, re-embed the required corpus, and evaluate retrieval quality against representative queries.
+During migration, I could run shadow retrieval to compare results without affecting users.
+After validation, I would gradually shift traffic and preserve rollback capability.
+I would not mix incompatible embedding spaces in one index without an explicitly validated design.
+Principal-level insight: Retrieval migrations require the same operational discipline as database schema migrations.
+40. How would you prevent cross-tenant data leakage in RAG and memory?
+Answer:
+I would enforce tenant isolation at the data-access layer, retrieval layer, and application authorization boundary.
+Every stored artifact would carry trusted tenant ownership metadata.
+The retrieval service would derive tenant identity from authenticated context, never from an LLM-generated filter.
+I would test adversarial queries that attempt to retrieve another tenant's documents or exploit ambiguous identifiers.
+I would also isolate caches, logs, embeddings, and evaluation datasets where necessary.
+Success criterion: Unauthorized cross-tenant retrieval must be treated as a critical security failure, regardless of answer quality.
+Section 5 — Distributed systems, scalability, and reliability
+41. Design an agentic platform supporting 10,000 workflows per day.
+Answer:
+I would begin with workload assumptions rather than equating daily volume with peak concurrency.
+Ten thousand workflows per day is approximately 0.116 workflow starts per second on average. If traffic peaks at ten times the average, that becomes approximately 1.16 starts per second.
+Assume each workflow performs eight model calls and six tool calls. That produces 80,000 model calls and 60,000 tool calls daily, before retries.
+I would use stateless API servers, a durable workflow store, task queues, horizontally scalable execution workers, a model gateway, and a governed tool gateway.
+Long-running workflows would execute asynchronously and expose status through polling, streaming, or callbacks.
+I would load-test burst traffic, tool latency, provider throttling, and failure recovery.
+Principal-level insight: Capacity planning must account for active workflow duration, fan-out, model token throughput, and downstream quotas—not just incoming requests.
+42. How would you calculate concurrency requirements?
+Answer:
+I would use Little's Law as an initial capacity-planning approximation:
+
+L=W
+Here, L is average work in progress,  is arrival rate, and W is average time in the system.
+If the platform receives 20 requests per second and each workflow takes 15 seconds, the average number of active workflows is approximately 300.
+However, active workflows are not equivalent to 300 continuously occupied CPU workers.
+Many agent workflows spend significant time waiting for model responses or external tools. I would separate waiting tasks from compute-intensive tasks and size each worker pool accordingly.
+I would also examine p95/p99 latency and burst behavior, because averages can hide operational risk.
+43. How would you handle sudden traffic spikes?
+Answer:
+I would use admission control, bounded queues, tenant-aware quotas, and autoscaling.
+Stateless API servers can scale based on request volume, while execution workers can scale using queue depth, oldest task age, and observed processing throughput.
+I would apply backpressure before overwhelming model providers or enterprise APIs.
+Lower-priority workloads could be delayed, and optional enrichment steps could be disabled under pressure.
+For critical workflows, I would reserve capacity or define explicit priority classes.
+Trade-off: Aggressive autoscaling improves burst responsiveness but can increase cost and amplify downstream rate-limit problems.
+44. How do you ensure idempotency across agent workflows?
+Answer:
+I would assign each logical business operation a stable idempotency key.
+The key should identify the intended action independently of how many times a worker retries it.
+Before executing a mutation, the platform checks the operation record and coordinates with the downstream system's idempotency capabilities.
+Where the external API lacks idempotency support, I would implement reconciliation and carefully designed deduplication, acknowledging that perfect exactly-once effects may not be achievable.
+For example, creating a Jira issue should not create duplicates after a worker timeout.
+Principal-level insight: At-least-once delivery plus idempotent handling is often more realistic than claiming exactly-once distributed execution.
+45. How would you design fault tolerance for long-running agents?
+Answer:
+I would use durable checkpoints at meaningful workflow boundaries.
+A checkpoint would capture completed tasks, pending dependencies, workflow version, approved actions, and external operation references.
+Execution workers should be replaceable without losing the authoritative workflow state.
+I would implement leases or fencing mechanisms to prevent two workers from concurrently executing the same non-idempotent step.
+After recovery, the runtime reconciles uncertain external outcomes before resuming.
+Failure scenario: If a worker crashes after submitting a change but before recording success, recovery must determine whether the change occurred rather than automatically repeating it.
+46. How would you implement circuit breakers in an agent platform?
+Answer:
+I would apply circuit breakers to dependencies such as model providers, retrieval services, MCP servers, and external enterprise APIs.
+A circuit breaker monitors failures and latency. When a dependency becomes unhealthy, it temporarily rejects new calls rather than allowing cascading resource exhaustion.
+The platform can attempt recovery using controlled probes.
+Fallback behavior must be appropriate for the operation. Switching to another model may be acceptable for document summarization, but not automatically for a regulated decision requiring a specifically approved model.
+I would monitor circuit-breaker activations, recovery time, and fallback quality.
+47. How do you prevent cascading failures across agents?
+Answer:
+I would use bulkheads, bounded concurrency, timeouts, retry budgets, and dependency isolation.
+Each agent or tool category should have limits so one failing service cannot consume all worker capacity.
+Retries should respect overall workflow deadlines and avoid synchronized retry storms.
+I would distinguish mandatory from optional dependencies and design graceful degradation for the latter.
+For example, if a recommendation-enrichment service fails, the platform may still return a basic report. If the authorization service cannot establish permission, the sensitive action must stop.
+Principal-level insight: Failure isolation should be part of the initial architecture, not an afterthought.
+48. How would you design asynchronous agent execution?
+Answer:
+I would separate request acceptance from workflow execution.
+The API would validate the request, create a durable run record, and enqueue work. It would return a run identifier for subsequent status retrieval.
+Workers would execute tasks, checkpoint progress, and publish state changes.
+Clients could consume updates through server-sent events, WebSockets, or polling depending on the product requirements.
+I would implement cancellation and deadline propagation throughout the execution graph.
+For enterprise workflows, I would also define what cancellation means after an external action has already committed.
+49. How would you manage ordering and consistency in multi-agent execution?
+Answer:
+I would define ordering requirements at the business-operation level.
+Independent read-only tasks can run concurrently. Mutations that depend on each other should follow explicit dependency edges.
+I would use optimistic concurrency controls or conditional updates where supported.
+For example, an agent modifying a Jira issue should verify that the issue version or relevant status has not changed unexpectedly.
+For workflows spanning multiple systems, I would generally favor saga-style coordination over attempting a distributed transaction across every dependency.
+Trade-off: Stronger consistency improves correctness but can reduce availability and throughput.
+50. How would you design disaster recovery for an agentic platform?
+Answer:
+I would identify the critical durable assets: workflow state, approval records, configuration versions, audit evidence, and persistent knowledge.
+I would define recovery point and recovery time objectives based on business requirements.
+The platform should support tested database recovery, infrastructure reconstruction, secret restoration, and controlled restart of unfinished workflows.
+During regional failover, I would prevent duplicate execution of externally committed operations.
+I would run disaster-recovery exercises that simulate database unavailability, model-provider outages, and regional failures.
+Principal-level insight: Restoring infrastructure is not sufficient; the platform must also restore correct workflow execution semantics.
+Section 6 — Security, identity, and AI governance
+51. How would you design zero-trust security for an agentic AI platform?
+Answer:
+I would assume that no agent, tool, workload, or network segment is inherently trusted.
+Every request must have an authenticated identity, explicit authorization, and a bounded execution context.
+I would implement workload identity for services, user identity propagation for delegated actions, mTLS where appropriate, short-lived credentials, and policy enforcement at sensitive boundaries.
+Agent prompts and tool outputs would be treated as untrusted inputs.
+I would also separate the permissions required for reading data, generating recommendations, and performing mutations.
+Principal-level insight: Zero trust requires continuous enforcement, not simply authentication when a session starts.
+52. How do you implement least privilege and least agency?
+Answer:
+Least privilege limits what resources and operations an identity can access.
+Least agency extends this principle to the autonomy granted to an AI system.
+For example, an agent may have permission to create Jira issues but should not automatically be allowed to create unlimited issues without user confirmation or rate limits.
+I would define autonomy tiers: read-only assistance, recommendation generation, approval-required actions, and bounded autonomous execution.
+Each tier would have explicit tool permissions, execution budgets, and operational safeguards.
+Measurement: I would track unnecessary permissions, autonomous mutation rates, policy denials, and actions requiring human intervention.
+53. How would you propagate user identity across a chain of agents?
+Answer:
+I would preserve the initiating user's identity separately from each agent's workload identity.
+Each delegation would carry a trusted authorization context describing the actor, delegated authority, audience, scope, expiry, and task.
+For cross-service delegation, I would use an appropriate token-exchange or delegated-credential mechanism rather than forwarding unrestricted user tokens.
+The downstream service would validate the delegation and enforce its own resource-level policy.
+For example, a supervisor agent cannot expand a user's Jira permissions simply by delegating to an agent with broader service credentials.
+Principal-level insight: The effective authorization must never exceed the authority legitimately delegated through the chain.
+54. What is the role of PDP and PEP in agentic architecture?
+Answer:
+A Policy Decision Point (PDP) evaluates whether an action is allowed under the applicable policies.
+A Policy Enforcement Point (PEP) intercepts the operation and enforces the decision.
+I would place PEPs at tool gateways, data-access services, sensitive APIs, and other protected execution boundaries.
+The PDP would evaluate trusted subject, action, resource, and environmental attributes.
+The policy response may include obligations such as requiring human approval, limiting output fields, or applying additional logging.
+Follow-up: Why not let the agent enforce policy itself?
+Because an LLM is probabilistic and may misunderstand or disregard instructions. Authorization requires deterministic enforcement independent of the model.
+55. How would you prevent prompt injection in an enterprise agent platform?
+Answer:
+I would treat retrieved documents, tool responses, user-uploaded content, and external messages as lower-trust inputs.
+The platform should separate trusted instructions from untrusted content and avoid giving retrieved text authority over tool execution.
+I would use constrained tool schemas, least-privilege permissions, content inspection, and deterministic authorization checks.
+For high-risk actions, the platform would require additional validation or approval.
+I would continuously test attacks such as malicious Confluence pages, manipulated Jira descriptions, and tool responses instructing the agent to disclose secrets.
+Principal-level insight: Prompt injection cannot be solved reliably with a stronger system prompt alone.
+56. How would you design audit logging for autonomous agents?
+Answer:
+I would capture the complete operational decision trail: initiating actor, agent identity, workflow ID, delegation chain, model and prompt versions, tool requests, policy decisions, approvals, and action outcomes.
+Audit events should be structured and correlated across services.
+I would use tamper-evident storage or cryptographically protected audit mechanisms where required.
+Sensitive payloads should be redacted or protected according to data classification and retention policies.
+I would distinguish observability logs from authoritative audit records.
+Success criterion: An investigator should be able to reconstruct who initiated an action, which agent performed it, what authority was used, and what external effect occurred.
+57. How would you handle secrets and credentials used by agents?
+Answer:
+I would never place long-lived credentials in prompts, conversation memory, or agent configuration files.
+Secrets should be managed through an enterprise secret-management system, and services should use workload identities where possible.
+Agents should receive access to capabilities, not raw credentials.
+For external APIs, the tool gateway can obtain short-lived credentials and execute operations on behalf of the authorized actor.
+I would implement rotation, revocation, audit trails, and environment separation.
+Failure scenario: If an agent's execution environment is compromised, the attacker should not gain unrestricted access to other tenants or systems.
+58. How would you implement tenant isolation?
+Answer:
+I would enforce tenant boundaries across authentication, authorization, workflow state, retrieval, caches, logs, and tool execution.
+Tenant identity must come from trusted authentication infrastructure.
+For shared infrastructure, I would use tenant-scoped database access, partitioning where appropriate, and resource quotas.
+Higher-risk customers may require stronger physical or logical isolation, depending on contractual and regulatory requirements.
+I would perform adversarial tests for cross-tenant retrieval, cache contamination, and authorization bypass.
+Principal-level insight: Tenant isolation must be end-to-end; isolating only the primary database is insufficient.
+59. How would you secure autonomous actions that modify production systems?
+Answer:
+I would establish an explicit risk classification for actions.
+Read-only diagnostics may be allowed under ordinary authorization. Production mutations should require stronger safeguards.
+For a production deployment agent, I would require a constrained action schema, authorized target environment, change-policy validation, deployment window checks, and appropriate approvals.
+The execution service should support dry-run validation, canary rollout, rollback, and emergency stop mechanisms.
+I would also restrict the agent's ability to modify its own policies or approval requirements.
+Principal-level insight: Production autonomy should be earned through evidence, not enabled simply because the model can call deployment tools.
+60. How would you demonstrate compliance and accountability for agentic AI?
+Answer:
+I would map applicable regulatory and organizational requirements into technical controls.
+These might include data minimization, access control, retention, traceability, human oversight, model evaluation, and incident response.
+Each control should have an owner, implementation mechanism, and verifiable evidence.
+For example, a requirement that high-risk actions receive approval should map to workflow gates, signed approval records, and automated tests proving bypass attempts fail.
+I would also maintain versioned model and policy inventories.
+Principal-level insight: Governance is effective only when its requirements are enforceable, measurable, and auditable.
+Section 7 — LLM routing, evaluation, and observability
+61. How would you design a multi-model LLM gateway?
+Answer:
+I would build a provider-independent model gateway with standardized request and response contracts.
+It would support model selection, authentication, quotas, token accounting, retry policies, structured outputs, and telemetry.
+Model selection could consider task complexity, data classification, latency objectives, context length, cost, and approved provider availability.
+For example, simple issue classification may use a smaller model, while complex cross-document reasoning may require a stronger model.
+I would maintain an allowlist of approved models and prevent agents from choosing arbitrary providers.
+Trade-off: Provider abstraction improves flexibility, but excessive abstraction can hide valuable provider-specific capabilities.
+62. How would you implement intelligent model routing?
+Answer:
+I would define routing policies using task type, estimated complexity, quality requirements, data restrictions, and budget.
+A simple router might use deterministic rules. A more advanced router could use a trained classifier or calibrated model to estimate whether a task needs a larger model.
+I would benchmark routing against a strong-model baseline.
+The goal is to reduce cost without materially degrading quality.
+For example, routine Jira issue categorization might be handled by a smaller model, while architecture analysis uses a larger model.
+Evaluation: Quality-adjusted cost, routing accuracy, fallback frequency, latency, and task success.
+63. How would you measure agent quality?
+Answer:
+I would separate quality into several dimensions: task completion, factual correctness, tool-use correctness, policy compliance, and user usefulness.
+For retrieval-heavy tasks, I would measure evidence relevance and groundedness.
+For action-oriented tasks, I would verify whether the intended external state change occurred correctly.
+I would maintain a versioned evaluation dataset containing representative requests, edge cases, and adversarial examples.
+Automated model-based grading can help, but critical correctness claims should be validated using deterministic checks or human review.
+Principal-level insight: A fluent answer is not necessarily a correct or successful agent execution.
+64. How would you evaluate a multi-agent workflow end to end?
+Answer:
+I would evaluate both individual components and complete workflows.
+Component tests cover tool schemas, retrieval quality, model outputs, and policy enforcement.
+End-to-end tests verify task completion, delegation correctness, recovery behavior, and final business outcomes.
+For example, a campaign workflow should not merely produce a plausible recommendation. It should use authorized data, respect eligibility rules, and create the expected approval request.
+I would use recorded test scenarios with controlled external dependencies.
+Metrics: Workflow success rate, incorrect-action rate, latency, cost, recovery rate, and human escalation rate.
+65. How would you design an agent evaluation framework?
+Answer:
+I would create a versioned evaluation framework with datasets, execution adapters, graders, reports, and promotion criteria.
+Each test case would specify the input, relevant context, expected constraints, and evaluation method.
+I would combine deterministic assertions, semantic evaluation, and expert review.
+The framework should support offline regression testing and controlled online experiments.
+I would also track results by model version, prompt version, tool version, and agent configuration.
+Principal-level insight: Evaluation must become part of the release pipeline, not an occasional manual exercise.
+66. How would you prevent regressions after changing an LLM model?
+Answer:
+I would run the candidate model against the existing evaluation suite before promotion.
+The suite should include ordinary tasks, complex workflows, safety cases, and known historical failures.
+I would compare task quality, tool-call behavior, latency, cost, and output-schema compliance.
+If the model passes offline evaluation, I would deploy it to shadow traffic or a limited canary cohort.
+I would preserve the previous configuration for rollback.
+Trade-off: A newer model may improve reasoning while introducing changes in tool selection or structured output behavior.
+67. How would you design observability for an agentic platform?
+Answer:
+I would instrument the platform using distributed traces, metrics, and structured logs.
+A trace should connect the user request, supervisor decisions, agent delegations, model calls, retrieval operations, policy checks, and tool invocations.
+I would use OpenTelemetry-compatible instrumentation and propagate trace context across asynchronous tasks.
+Important metrics include request rate, task success, model latency, tool failures, token consumption, queue delay, and policy denials.
+I would avoid logging sensitive prompt content by default without appropriate controls.
+Principal-level insight: Observability should answer why a workflow failed, not merely which service returned an error.
+68. How would you investigate p99 latency spikes?
+Answer:
+I would first break down end-to-end latency into queue wait, context preparation, retrieval, model inference, tool execution, and orchestration overhead.
+I would inspect distributed traces for the slowest requests and correlate them with provider throttling, cold starts, large prompts, or downstream service degradation.
+For parallel agent workflows, the slowest mandatory dependency often determines completion time.
+I would compare p50, p95, and p99 distributions rather than optimizing only the average.
+Possible mitigations include bounded fan-out, caching, smaller prompts, better model routing, concurrency controls, and reducing unnecessary agent steps.
+Principal-level insight: Optimize the critical path, not the number of components.
+69. How would you define SLOs for an agentic platform?
+Answer:
+I would define SLOs around user-visible outcomes rather than infrastructure availability alone.
+Examples include successful workflow completion, end-to-end latency, tool execution reliability, and correctness of critical actions.
+Different workload classes may need different SLOs.
+Interactive question answering may require low latency, while long-running research workflows may prioritize completion reliability.
+For sensitive operations, unauthorized action rate and audit completeness are important control metrics, though their acceptance criteria should be stricter than ordinary availability targets.
+I would use error budgets to guide release decisions and reliability investments.
+70. How would you optimize LLM cost at platform scale?
+Answer:
+I would first establish cost attribution by tenant, agent, workflow, model, and successful business outcome.
+Then I would optimize unnecessary model calls, oversized prompts, repeated retrieval, and redundant agent delegation.
+Potential improvements include smaller-model routing, caching where safe, prompt compression, batching when supported, and selective use of reflection.
+I would set budgets at the workflow and tenant levels.
+Cost optimization must be evaluated against quality and latency.
+Example: Reducing model spend by 30% is not beneficial if the change doubles the rate of incorrect business actions.
+Section 8 — Infrastructure, deployment, and platform engineering
+71. How would you deploy an enterprise agentic platform on AWS?
+Answer:
+I would use managed infrastructure where it reduces operational burden without compromising essential requirements.
+A representative architecture could use an API gateway and load balancer, containerized services on ECS or EKS, AWS Bedrock for approved model access, PostgreSQL-compatible storage for durable workflow state, and object storage for artifacts.
+I would use a queue or workflow service for asynchronous execution and a dedicated tool-access layer for enterprise integrations.
+Secrets would be managed centrally, and workload identities would control access to AWS resources.
+Infrastructure would be defined through Terraform or another infrastructure-as-code framework.
+Trade-off: ECS can simplify operations for straightforward container workloads, while EKS offers more Kubernetes ecosystem flexibility at additional operational cost.
+72. How would you design the CI/CD pipeline for an agentic platform?
+Answer:
+I would build a pipeline that validates both conventional software behavior and AI-specific behavior.
+The pipeline would include static analysis, unit tests, contract tests, security scanning, integration tests, and agent evaluation suites.
+Before production promotion, I would test model and prompt compatibility, tool permissions, and critical workflow scenarios.
+Deployment would use staged rollout, canary analysis, and rollback controls.
+I would version code, prompts, model configuration, agent definitions, and tool contracts together.
+Principal-level insight: A successful build does not prove an AI agent is safe or correct to deploy.
+73. How would you implement progressive delivery for agents?
+Answer:
+I would use controlled rollout stages: development, evaluation, shadow testing, canary deployment, and wider production rollout.
+Traffic could be segmented by tenant, workflow type, or risk classification.
+During canary deployment, I would compare task success, latency, cost, tool errors, and safety outcomes against the previous version.
+High-risk action capabilities should have stricter promotion gates.
+I would support rapid rollback of agent configuration independently of infrastructure where possible.
+Failure scenario: If a new prompt increases unauthorized tool attempts, the rollout should stop automatically even if ordinary response-quality metrics improve.
+74. How would you manage configuration across hundreds of agents?
+Answer:
+I would use a centralized configuration registry with versioned, validated agent definitions.
+Configuration would include model policy, allowed capabilities, timeout budgets, prompt templates, and environment-specific settings.
+Changes would pass schema validation and approval workflows.
+Execution runs would record the exact configuration version used.
+I would separate non-sensitive configuration from credentials and secrets.
+Principal-level insight: Configuration is part of the software supply chain and should receive comparable governance.
+75. How would you design an internal developer platform for agent teams?
+Answer:
+I would provide a paved-road developer experience through standardized SDKs, templates, deployment pipelines, and operational dashboards.
+Teams should be able to create a new agent with built-in authentication, tracing, policy enforcement, evaluation, and deployment support.
+I would offer a local development environment with mocked model and tool services.
+The platform would expose reusable capabilities without forcing every team into the same business logic.
+Success metrics: Time to first deployment, onboarding time, production incident rate, platform adoption, and duplicated engineering effort avoided.
+76. How would you implement autoscaling for agent workers?
+Answer:
+I would scale workers based on workload-specific indicators rather than CPU utilization alone.
+Useful signals include queue depth, task age, active executions, model-provider quotas, and tool latency.
+I would separate CPU-intensive workloads from network-bound orchestration tasks.
+Autoscaling policies must account for startup time and downstream capacity.
+I would also implement maximum concurrency and tenant quotas to prevent uncontrolled expansion.
+Trade-off: More workers do not improve throughput if the actual bottleneck is an external model provider or API rate limit.
+77. How would you manage platform infrastructure costs?
+Answer:
+I would create a cost model covering model tokens, compute, storage, retrieval, networking, observability, and external API usage.
+Costs should be attributed to tenants, teams, workflows, and capabilities.
+I would identify underutilized worker capacity, excessive trace retention, duplicate model calls, and unnecessary indexing.
+I would also implement budgets and alerts for abnormal consumption.
+For architectural decisions, I would compare total cost of ownership rather than only cloud compute cost.
+Principal-level insight: The platform should optimize cost per successful business workflow, not just cost per model call.
+78. How would you design multi-region deployment?
+Answer:
+I would first determine residency, availability, latency, and disaster-recovery requirements.
+Stateless services can be deployed across regions, but durable workflow state and side-effecting operations require careful ownership and consistency rules.
+I would establish a clear strategy for active-active or active-passive execution.
+For workflows with external mutations, I would use region-aware ownership and fencing to avoid duplicate execution during failover.
+Tenant data must remain within permitted geographic boundaries.
+Trade-off: Active-active deployments can improve resilience but substantially increase consistency and operational complexity.
+79. How would you design sandbox isolation for agents?
+Answer:
+I would classify agents according to the operations they perform and the code they execute.
+Agents that execute generated code or interact with untrusted artifacts may require stronger isolation using containers, microVMs, or equivalent sandboxing technologies.
+The sandbox should restrict filesystem access, network egress, process capabilities, and credential availability.
+Resource limits should prevent runaway CPU, memory, and execution time.
+I would treat sandboxing as defense in depth, not as a replacement for identity, authorization, and audit controls.
+Principal-level insight: A sandbox limits execution effects; governance determines whether an action should be allowed in the first place.
+80. How would you design an emergency shutdown mechanism for autonomous agents?
+Answer:
+I would implement kill switches at multiple scopes: global platform, tenant, agent version, tool capability, and workflow class.
+A shutdown action should prevent new high-risk operations and interrupt pending execution where safe.
+The runtime should distinguish between stopping future work and reversing already committed external actions.
+I would maintain an authoritative mechanism for revoking permissions and disabling tool access.
+Emergency controls should be tested regularly.
+Failure scenario: If an agent begins generating unauthorized Jira mutations, the platform must be able to disable that capability without taking every unrelated service offline.
+Section 9 — Atlassian enterprise integration and product architecture
+These are hypothetical system-design scenarios using Atlassian's Jira, Confluence, and Rovo ecosystem. They are not claims about Atlassian's internal implementation.
+81. How would you design an AI agent that creates Jira issues from natural language?
+Answer:
+I would build an agent that converts a natural-language request into a structured issue-creation proposal.
+The agent would identify the target project, issue type, summary, description, and relevant metadata.
+Before creation, the platform would validate the schema, required fields, project permissions, and business rules.
+For ambiguous requests, it should ask for clarification rather than inventing project identifiers or issue ownership.
+The user would review the proposed issue when required by product policy.
+The final Jira API call would execute through an authorized tool adapter with idempotency protection.
+Evaluation: Correct project selection, field accuracy, duplicate creation rate, unauthorized action rate, and user correction frequency.
+82. How would you build an agent that answers questions across Jira and Confluence?
+Answer:
+I would combine permission-aware retrieval with structured API access.
+Confluence documents can provide narrative knowledge, while Jira APIs provide authoritative issue state, ownership, and workflow information.
+The agent would use hybrid search and reranking to retrieve relevant documents, then fetch current structured data where freshness matters.
+Responses should include source references and distinguish verified facts from inferred conclusions.
+Access control must be enforced before retrieved information reaches the model.
+Example: For “Why is release X delayed?”, the agent could combine blocked Jira issues, dependency relationships, and relevant Confluence planning documents.
+Principal-level insight: Enterprise search quality depends on both semantic relevance and permission correctness.
+83. How would you architect a Rovo-style enterprise AI assistant?
+Answer:
+I would design a conversational interaction layer backed by a permission-aware knowledge and action platform.
+The assistant would route requests to search, reasoning, and specialized action capabilities.
+A context service would combine authorized enterprise knowledge, relevant conversation state, and live application data.
+A governed tool layer would execute permitted actions across Jira, Confluence, and approved third-party systems.
+The platform would support citations, structured responses, approvals, and traceability.
+I would separate the conversational user experience from the underlying agent execution infrastructure so multiple products can reuse the same capabilities.
+Trade-off: Shared infrastructure improves consistency, but product-specific workflows still require domain-aware behavior.
+84. How would you design an agent that identifies project delivery risks?
+Answer:
+I would combine deterministic project metrics with LLM-based interpretation.
+The platform could analyze overdue issues, dependency blockers, work-in-progress trends, unresolved incidents, and milestone changes.
+I would use structured Jira data as the authoritative source for issue state.
+The model would synthesize risk explanations and suggest mitigations, while deterministic rules calculate objective indicators.
+Recommendations should include supporting evidence and uncertainty.
+Evaluation: Precision and recall of risk identification, false-positive rate, lead time before an actual delay, and usefulness of recommended actions.
+Principal-level insight: The agent should support project decisions, not present speculative delivery predictions as facts.
+85. How would you build an AI agent for incident response integrated with Jira?
+Answer:
+I would design a workflow that collects incident context, retrieves relevant runbooks, analyzes telemetry, and prepares diagnostic recommendations.
+The agent could create or update incident records through authorized Jira integrations.
+I would separate diagnostic actions from remediation actions.
+Read-only log queries may be allowed automatically, while production changes require stronger approval and policy controls.
+Every recommendation should link to supporting evidence.
+I would implement an incident-specific execution budget and timeouts to avoid delaying human responders.
+Evaluation: Time to useful diagnosis, evidence accuracy, false remediation recommendations, and incident-response efficiency.
+86. How would you design an agent marketplace for Atlassian customers?
+Answer:
+I would build a registry where developers can publish versioned agent capabilities with clear contracts.
+Each listing would describe supported use cases, required permissions, data access, deployment model, and ownership.
+Installation would require an explicit authorization and consent process.
+Agents would execute under tenant-aware controls and standardized observability.
+I would introduce validation requirements covering security, reliability, contract compatibility, and evaluation quality.
+Principal-level insight: Marketplace trust requires lifecycle governance, not just a searchable catalog.
+87. How would you support third-party enterprise agents?
+Answer:
+I would define interoperable contracts for capability discovery, task delegation, authentication, and result exchange.
+Third-party agents would be treated as separate trust domains.
+The platform would validate identity, permissions, data-sharing constraints, and supported operations before delegation.
+I would use protocol adapters where necessary and avoid assuming every third-party system implements identical semantics.
+For long-running tasks, I would support asynchronous status updates and cancellation where the integration permits.
+Trade-off: Open interoperability expands the ecosystem but increases security and compatibility requirements.
+88. How would you prevent an AI agent from modifying unauthorized Jira projects?
+Answer:
+I would derive the initiating user's identity from a trusted authentication context.
+The agent could propose a Jira operation, but the tool gateway would validate project-level and operation-level permissions before execution.
+The platform would also enforce tenant boundaries, workflow rules, and approval requirements.
+The agent should never be able to modify the project identifier after approval without triggering a new authorization decision.
+I would test unauthorized project access, cross-tenant requests, and malicious prompt instructions.
+Success criterion: A valid tool call must still be denied when the actor lacks the required permission.
+89. How would you design a multi-tenant agent platform for enterprise customers?
+Answer:
+I would separate shared platform services from tenant-specific configuration and data.
+Each tenant would have its own policy context, quotas, agent installations, model permissions, and data-access boundaries.
+The platform would support configurable residency and retention requirements.
+I would implement fair scheduling to prevent one customer's workload from degrading others.
+For larger enterprise customers, dedicated execution pools could be offered when justified by isolation or performance requirements.
+Principal-level insight: Multi-tenancy is not simply a database partitioning strategy; it is an end-to-end operational and security model.
+90. How would you measure the business value of AI agents in Atlassian workflows?
+Answer:
+I would define business outcomes before selecting technical metrics.
+For Jira issue creation, I might measure time saved, correction rate, and successful issue creation.
+For knowledge retrieval, I would measure time to useful answer, citation quality, and reduction in repeated manual searches.
+For project-risk analysis, I would measure whether earlier identification leads to improved delivery decisions.
+I would use controlled experiments or credible before-and-after comparisons where feasible.
+I would also account for AI operating cost, user review time, and error correction.
+Principal-level insight: Adoption and token volume are not sufficient evidence of customer value.
+Section 10 — Principal Engineer system design, incidents, and leadership
+91. Design a production-grade agentic platform supporting one million requests per day.
+Answer:
+I would begin by clarifying whether one million refers to API requests, agent workflows, or model invocations, because the capacity requirements differ substantially.
+Assuming one million workflow starts per day:
+Illustrative capacity model
+Daily workflows
+1M
+Average starts/sec
+11.6
+Peak starts/sec at 10×
+116
+Model calls/day at 5 per workflow
+5M
+Planning assumptions, not measured Atlassian workload figures.
+I would design stateless API services, durable asynchronous orchestration, partitioned execution queues, horizontally scalable workers, a model gateway, and tenant-aware tool services.
+Workflow state would be durable, and external mutations would require idempotency or reconciliation.
+I would implement admission control, concurrency quotas, caching, backpressure, and circuit breakers.
+The platform would be evaluated through load tests, fault injection, and tenant-isolation tests.
+Principal-level insight: I would prioritize predictable behavior under overload rather than simply maximizing throughput.
+92. A multi-agent workflow caused an unauthorized business action. How would you investigate?
+Answer:
+My first priority would be containment.
+I would disable the affected action capability or agent version, preserve evidence, and determine whether other workflows were affected.
+Next, I would reconstruct the execution using trace IDs, policy decisions, delegation records, approval artifacts, and tool invocation logs.
+I would investigate whether the failure resulted from missing authorization, incorrect identity propagation, prompt injection, a tool adapter defect, or a race condition.
+After identifying the root cause, I would implement preventive controls and add a regression test reproducing the incident.
+I would also assess customer impact and follow the organization's incident reporting requirements.
+Principal-level insight: The permanent fix should address the architectural control failure, not merely modify the prompt that triggered the incident.
+93. How would you migrate an existing chatbot platform to agentic architecture?
+Answer:
+I would avoid replacing the entire platform at once.
+First, I would inventory existing use cases, integrations, identity controls, and operational constraints.
+Then I would introduce a governed tool layer and structured execution contracts.
+I would migrate selected read-only workflows into agentic execution while preserving the existing conversational interface.
+Next, I would add durable state, evaluation, observability, and approval-controlled actions.
+I would compare the new architecture against the chatbot baseline on task success, latency, cost, and safety.
+Trade-off: Incremental migration may temporarily create architectural duplication, but it reduces production risk.
+94. How would you choose between building and buying an agentic platform?
+Answer:
+I would evaluate the strategic importance of the capability and the maturity of available products.
+Commodity capabilities such as basic model connectivity, infrastructure monitoring, and workflow scheduling may be better obtained through existing services.
+Capabilities that provide differentiation—such as domain-specific governance, customer integrations, or proprietary workflow intelligence—may justify custom development.
+I would compare total cost of ownership, security requirements, extensibility, portability, and operational responsibility.
+I would also consider exit costs and the risk of vendor lock-in.
+Principal-level insight: The correct decision is not necessarily to build more. It is to retain ownership of the capabilities that matter strategically.
+95. How would you influence multiple engineering teams to adopt your architecture?
+Answer:
+I would begin by understanding each team's requirements and existing constraints.
+Rather than issuing architecture mandates without supporting evidence, I would create reference implementations, clear contracts, and reusable platform capabilities.
+I would establish architecture decision records and review processes for significant design choices.
+I would also identify early adopters and use their outcomes to demonstrate value.
+Adoption metrics would include integration effort, production reliability, developer satisfaction, and reduction in duplicated infrastructure.
+Principal-level insight: Principal-level influence is demonstrated by architectural adoption and outcomes across teams, not by formal authority alone.
+96. How would you resolve disagreement between two senior architects?
+Answer:
+I would first identify the actual decision criteria behind the disagreement.
+For example, one architect may prioritize scalability while another prioritizes operational simplicity.
+I would make assumptions explicit and compare options using measurable requirements.
+Where uncertainty remains, I would propose a time-boxed proof of concept or benchmark.
+The final decision would be documented with rationale, trade-offs, and conditions that might trigger reconsideration.
+I would ensure that both perspectives are fairly represented.
+Principal-level insight: Technical leadership means improving decision quality, not winning every architecture debate.
+97. How would you balance platform reliability against delivery deadlines?
+Answer:
+I would classify work by customer impact, operational risk, and reversibility.
+Security vulnerabilities, critical data-integrity defects, and reliability issues affecting essential workflows should receive immediate attention.
+For lower-risk features, I would consider staged rollout, feature flags, and controlled technical debt.
+I would use SLOs, error budgets, and incident trends to support prioritization.
+I would communicate the consequences of each option to product and engineering leadership.
+Principal-level insight: The objective is sustainable delivery, not maximizing short-term feature output at the expense of system integrity.
+98. How would you demonstrate hands-on technical depth as a Principal Engineer?
+Answer:
+I would describe a real architectural problem and walk through its implementation details.
+For example, in a multi-agent campaign platform, I could explain how requests enter FastAPI, how Google ADK coordinates agents, how model calls are routed through an approved provider, and how data access is governed.
+I would discuss specific contracts, state transitions, timeout behavior, failure modes, and deployment considerations.
+I would also explain the alternatives considered and why they were rejected.
+I would be prepared to write pseudocode, explain API schemas, analyze logs, and debug a failure.
+Principal-level insight: Architecture ownership is more credible when supported by concrete implementation knowledge.
+99. How would you define a 12-month roadmap for an enterprise agentic AI platform?
+Answer:
+I would divide the roadmap into capability milestones.
+Quarter 1 — Foundation: Establish platform architecture, identity, model gateway, workflow runtime, telemetry, and initial evaluation framework.
+Quarter 2 — Governed execution: Introduce tool gateway, agent registry, approval workflows, policy enforcement, and durable execution.
+Quarter 3 — Scale and ecosystem: Add multi-tenant quotas, interoperability, advanced routing, self-service developer onboarding, and reliability improvements.
+Quarter 4 — Optimization: Improve cost efficiency, operational automation, evaluation coverage, customer adoption, and platform maturity.
+Each quarter would have measurable exit criteria and dependency tracking.
+I would revisit the roadmap based on customer feedback and operational evidence rather than treating it as fixed.
+Principal-level insight: A platform roadmap must balance foundational engineering investment with incremental customer value.
+100. Why should Atlassian hire you as an AI Principal Engineer?
+Suggested interview answer:
+My experience combines enterprise software engineering, technical leadership, and hands-on work with agentic AI platforms.
+Over my 17+ years in engineering, I have progressed from individual-contributor responsibilities into architecture reviews, technical decision-making, cross-functional collaboration, and engineering leadership.
+My recent work has focused on enterprise agent orchestration, Google ADK, model integration, governed tool execution, and identity-aware AI systems.
+What I would bring to Atlassian is the ability to connect AI architecture with production engineering requirements. I look beyond whether an agent can complete a task and consider how the platform manages state, authorization, reliability, scalability, observability, and cost.
+I also understand that a Principal Engineer must influence beyond one team. That means creating reusable architectural patterns, establishing engineering standards, mentoring engineers, and making trade-offs that improve outcomes across products.
+I see a strong opportunity to apply these skills to enterprise AI experiences involving Jira, Confluence, Rovo, and the broader developer ecosystem.
+My goal would be to help build AI capabilities that customers can trust, developers can extend, and Atlassian can operate reliably at scale.
+
+AI Principal Engineer — Practical Implementation Examples for Key Technical Terms
+Using your attached PrincipalEngineer_ALL.pdf, I'll map the technical concepts to concrete implementation examples you can explain in an Atlassian Principal Engineer interview.
+I'll use two reference applications throughout: an enterprise banking campaign-management platform built with Google ADK, AWS Bedrock, FastAPI, and PostgreSQL; and an Atlassian AI assistant integrating Jira, Confluence, MCP, and A2A.
+The examples below are illustrative implementation patterns, not claims about features already deployed in your projects.
+1. Agentic AI Platform & Architecture
+Technical term
+Practical implementation example
+Agentic AI
+A Google ADK agent interprets "Analyze campaign C101," retrieves metrics, investigates underperformance, and generates recommendations.
+Enterprise Agentic Platform
+Deploy FastAPI, Google ADK, a model gateway, MCP tools, PostgreSQL workflow storage, and centralized authorization as shared services.
+AI Agent
+Implement a CampaignInsightsAgent that accepts a campaign ID, invokes authorized analytics tools, and returns a structured performance report.
+Control Plane
+Store agent versions, model policies, allowed tools, and deployment configurations in a versioned PostgreSQL registry.
+Execution Plane
+Run agent tasks in ECS Fargate workers that retrieve context, call Bedrock, invoke tools, and persist execution results.
+API Gateway
+Configure AWS API Gateway to validate JWTs, enforce quotas, and route /agents/run requests to FastAPI.
+Agent Runtime
+Implement a workflow executor with states CREATED → RUNNING → WAITING_FOR_APPROVAL → COMPLETED.
+Model Gateway
+Expose an internal /models/invoke API that routes approved model requests to AWS Bedrock and records usage.
+Tool Gateway
+Route activate_campaign() through a gateway that checks identity, permissions, approval evidence, and request schema.
+Agent Contract
+Define a Pydantic schema for CampaignInsightsAgent with input fields, output types, tool scopes, and timeout constraints.
+Modular Architecture
+Separate orchestration, retrieval, model access, and authorization behind interfaces so implementations can change independently.
+Deterministic Workflow
+Execute segment → eligibility_check → compliance_check → approval → activation using explicit workflow transitions.
+Autonomous Planning
+Allow an agent to choose which analytics queries to run when investigating a campaign conversion anomaly.
+Hybrid Orchestration
+Let an LLM plan an investigation, but execute approved steps through a deterministic workflow engine.
+Google ADK
+Compose a supervisor and specialist agents using ADK's agent and runner abstractions.
+LangGraph
+Implement workflow nodes for retrieval, reasoning, approval, and execution, with explicit conditional transitions.
+AutoGen
+Build a prototype in which a researcher agent and reviewer agent exchange structured findings before producing a report.
+
+2. Multi-Agent Orchestration
+Technical term
+Practical implementation example
+Multi-Agent System
+Use customer-insights, product-eligibility, and campaign-recommendation agents to complete one campaign-planning workflow.
+Supervisor Agent
+Implement CampaignSupervisor to delegate tasks and combine specialist outputs into a final recommendation.
+Specialist Agent
+Implement EligibilityAgent to retrieve eligibility facts and call deterministic eligibility services.
+Sequential Orchestration
+Execute segmentation first, then eligibility validation using the selected audience as input.
+Parallel Orchestration
+Use asyncio.gather() to fetch product metadata, campaign history, and engagement metrics concurrently.
+Hierarchical Orchestration
+Use a campaign supervisor to coordinate analytics and compliance supervisors, each managing its own specialists.
+Planner-Executor
+Ask an LLM to produce a structured task DAG, validate it, and execute nodes through authorized tools.
+Reflection Pattern
+Have a reviewer model evaluate whether a campaign recommendation is supported by retrieved evidence.
+Human-in-the-Loop
+Create an approval record and pause the workflow until an authorized manager approves the exact campaign action.
+Agent Registry
+Register CustomerInsightsAgent v1.2 with its capability schema, owner, endpoint, and required permissions.
+Agent Discovery
+Query the registry for agents supporting campaign.eligibility.evaluate instead of hardcoding endpoints.
+Delegation
+Pass a task ID, deadline, and narrowly scoped authorization reference from the supervisor to a specialist agent.
+Context Sharing
+Send only aggregated conversion metrics to the recommendation agent rather than exposing raw customer records.
+Execution Budget
+Stop an agent after a configured limit of model calls, tool calls, tokens, or elapsed execution time.
+Checkpointing
+Persist completed workflow nodes so another worker can resume after an ECS task crashes.
+Saga Pattern
+If a multi-system campaign setup fails, run supported compensating operations and flag irreversible actions for review.
+Partial Failure
+Return a campaign-performance report without optional creative insights when the creative agent times out.
+Loop Detection
+Detect repeated RecommendationAgent → ReviewerAgent delegations and terminate after the allowed retry budget.
+
+3. MCP, A2A & Tool Interoperability
+Technical term
+Practical implementation example
+MCP
+Expose Jira capabilities through MCP so agents can discover and invoke get_issue and add_comment.
+A2A
+Have a supervisor delegate a release-risk investigation to a separately deployed specialist agent through an A2A task.
+MCP Server
+Implement a Python MCP server exposing a validated get_campaign_metrics(campaign_id) tool.
+MCP Client
+Connect an ADK agent to an approved MCP server and invoke its registered tools.
+MCP Gateway
+Place a gateway between agents and MCP servers to enforce authorization, schema validation, quotas, and audit logging.
+Tool Discovery
+Retrieve available tool definitions and filter them by the authenticated user's permitted capabilities.
+Tool Authorization
+Check whether the user has Jira transition permission before forwarding transition_issue().
+Workload Identity
+Assign each ECS task an IAM role or equivalent workload credential instead of embedding service passwords.
+mTLS
+Configure client and server certificates so two internal agent services mutually authenticate.
+Delegation Token
+Issue a short-lived credential allowing a specialist agent to read one authorized Jira project.
+Confused Deputy
+Prevent a privileged reporting agent from exporting customer records when the initiating user lacks export permission.
+Idempotency Key
+Attach operation_id=run123-create-issue to issue creation and reconcile retries against the operation record.
+Contract Testing
+Verify that a new Jira tool version still returns the required fields expected by consuming agents.
+Schema Validation
+Use Pydantic to reject a create_issue request missing a project key or containing invalid field types.
+Prompt Injection
+Treat instructions embedded in a Confluence page as untrusted content and deny unauthorized tool actions.
+Tool-Output Manipulation
+Validate and isolate retrieved tool content before presenting it to the model; never treat it as policy authority.
+
+Example: Governed MCP tool execution
+   approval_service,    campaign_service,):    decision = await policy_service.authorize(        subject=identity,        action="campaign.activate",        resource=request.campaign_id,    )    if not decision.allowed:        raise PermissionError("Action denied")    approval = await approval_service.validate(        approval_id=request.approval_id,        actor=identity,        action="campaign.activate",        resource=request.campaign_id,    )    if not approval.valid:        raise PermissionError("Approval required")    # Revalidate campaign state and execute through    # an idempotent, auditable domain service.    return await campaign_service.activate(        campaign_id=request.campaign_id,        approval_id=request.approval_id,    )
+This illustrates the enforcement boundary; a production implementation also needs tenant validation, approval-parameter binding, transactional state checks, idempotency, and audit recording.
+4. State, Memory, Context & RAG
+Technical term
+Practical implementation example
+Session Management
+Store session_id, user_id, and tenant_id in PostgreSQL and reload conversation context when a user returns.
+Workflow State
+Persist each agent run's status, completed tasks, and pending approvals independently of the conversation session.
+Short-Term Memory
+Keep the latest user request, recent tool outputs, and current campaign ID in session context.
+Long-Term Memory
+Store an approved reporting preference in a governed memory service for reuse across sessions.
+Context Window
+Check the model's supported token limit before assembling prompts and tool results.
+Context Budgeting
+Reserve token allocations for instructions, retrieved evidence, tool schemas, and expected output.
+RAG
+Retrieve relevant campaign policy documents from a vector index and pass authorized excerpts to the LLM.
+Embeddings
+Convert Confluence document chunks into vectors using an approved embedding model.
+Vector Search
+Query a vector index for documentation semantically similar to "credit card eligibility rules."
+Hybrid Search
+Combine BM25 keyword retrieval and vector similarity to find Jira issues by exact identifiers and meaning.
+Reranking
+Retrieve 30 document candidates, then use a reranker to select the most relevant five.
+Knowledge Graph
+Model Jira issues, releases, teams, and dependencies as connected entities and relationships.
+Virtual Knowledge Graph
+Use Ontop mappings to expose PostgreSQL campaign data as an ontology-based queryable graph.
+Ontology
+Define Campaign, CustomerSegment, Product, and EligibilityRule classes with their relationships.
+Data Provenance
+Attach document ID, source URL, version, and retrieval timestamp to evidence used in recommendations.
+Retrieval Freshness
+Recheck live Jira issue status before executing a workflow transition based on indexed information.
+Embedding Migration
+Create a new vector index for a replacement embedding model, re-embed documents, and compare Recall@10.
+Cross-Tenant Leakage
+Enforce authenticated tenant filters in retrieval queries and test that tenant A cannot access tenant B's documents.
+
+
+In production, the retrieval backend should enforce security constraints during candidate selection, not depend solely on post-retrieval filtering.
+5. Distributed Systems, Scalability & Reliability
+Technical term
+Practical implementation example
+Horizontal Scaling
+Increase ECS agent-worker replicas from 5 to 20 as workflow demand grows.
+Stateless Service
+Store durable session and workflow state externally so any API replica can serve a request.
+Durable Queue
+Place accepted agent tasks on Amazon SQS for processing by independently scalable workers.
+Little's Law
+At 20 requests/second and 15-second average duration, estimate 300 active workflows.
+Concurrency
+Allow independent analytics tasks to execute concurrently while limiting downstream API calls.
+Backpressure
+Stop accepting additional low-priority jobs when the queue exceeds a safe threshold.
+Admission Control
+Return HTTP 429 or queue work when tenant quotas or system capacity limits are reached.
+Rate Limiting
+Limit a tenant to an agreed number of model or tool requests per minute.
+Idempotency
+Record a logical operation key so retries do not intentionally repeat completed campaign activations.
+At-Least-Once Delivery
+Process SQS messages with duplicate-safe handlers because messages may be delivered again.
+Fault Tolerance
+Resume a checkpointed agent workflow on another worker after a container failure.
+Circuit Breaker
+Temporarily reject calls to a failing MCP service after repeated timeouts and probe for recovery.
+Bulkhead Pattern
+Give analytics and production-mutation workloads separate concurrency pools.
+Exponential Backoff
+Retry transient failures after increasing delays, such as 1, 2, and 4 seconds.
+Jitter
+Randomize retry delays so thousands of workers do not retry simultaneously.
+Asynchronous Execution
+Return HTTP 202 with a run_id while a background worker processes a long-running request.
+Optimistic Concurrency
+Use a version column in PostgreSQL to reject updates when workflow state changed unexpectedly.
+Disaster Recovery
+Restore workflow state in a secondary region and reconcile incomplete external operations before resuming.
+RPO
+Configure recovery mechanisms to meet a defined maximum acceptable data-loss window.
+RTO
+Test whether the platform can restore critical workflows within the agreed recovery deadline.
+Graceful Degradation
+Return basic campaign analytics when optional recommendation enrichment is unavailable.
+
+
+6. Security, Identity & AI Governance
+Technical term
+Practical implementation example
+Zero Trust
+Authenticate each agent-to-tool request and evaluate permissions at every sensitive operation.
+IAM
+Integrate enterprise identity services to manage user, service, and agent access.
+Authentication
+Validate the user's JWT signature, issuer, audience, and expiry before accepting a request.
+Authorization
+Check whether the authenticated user can modify a particular Jira project.
+RBAC
+Define roles such as CampaignViewer, CampaignEditor, and CampaignApprover.
+ABAC
+Evaluate user department, requested action, campaign classification, and environment before allowing access.
+PDP
+Implement a policy service that returns ALLOW, DENY, or decisions with additional obligations.
+PEP
+Place middleware at tool and data-access boundaries that enforces the PDP decision.
+Least Privilege
+Give an analytics agent only read permissions for approved campaign datasets.
+Least Agency
+Permit autonomous report generation but require approval before campaign activation.
+Token Exchange
+Exchange a validated delegation credential for a narrower downstream access token.
+Short-Lived Credentials
+Issue tool-access tokens with a short TTL and resource-specific scopes.
+Human Approval
+Persist a signed approval bound to the exact campaign, audience, offer, and proposed action.
+Audit Trail
+Record actor, agent, tool, policy decision, workflow ID, and execution result.
+Tamper-Evident Logging
+Protect audit records with hash chaining or an approved immutable audit-storage mechanism.
+Tenant Isolation
+Scope workflow data, caches, vector indexes, and tool credentials to the authenticated tenant.
+Secrets Management
+Retrieve credentials from AWS Secrets Manager or an equivalent service instead of embedding them in prompts.
+Policy Obligations
+Require additional logging or human approval when the PDP identifies a high-risk operation.
+Governance
+Enforce versioned policies, approval controls, evaluations, and accountable execution records.
+Compliance Evidence
+Store policy decisions, signed approvals, test results, and deployment attestations for audit review.
+
+
+This is a simplified policy example. In production, the attributes must come from trusted identity and domain services, and the PEP must enforce any approval obligations before executing the action.
+7. LLM Routing, Evaluation & Observability
+Technical term
+Practical implementation example
+Multi-Model Gateway
+Build a LiteLLM-backed gateway that routes approved requests to AWS Bedrock and other permitted model providers.
+Intelligent Model Routing
+Route routine issue classification to a smaller model and complex architecture analysis to a stronger model.
+Small-Model Routing
+Use a lightweight classifier for Jira ticket categorization instead of invoking a large reasoning model every time.
+Agent Evaluation
+Run 500 representative campaign scenarios and compare outputs against expected business outcomes.
+End-to-End Evaluation
+Verify that the supervisor delegates correctly, uses authorized tools, and produces the expected approval request.
+Evaluation Dataset
+Store versioned JSONL test cases containing inputs, expected results, and policy constraints.
+Deterministic Grading
+Use pytest assertions to verify eligibility, valid schemas, and absence of unauthorized actions.
+LLM-as-Judge
+Ask an independent evaluation model to assess answer relevance and evidence quality against a rubric.
+Groundedness
+Verify that factual claims in a campaign report are supported by retrieved analytics or policy documents.
+Hallucination
+Detect unsupported campaign metrics by comparing generated values with authoritative data-service responses.
+Regression Testing
+Rerun agent evaluation suites whenever a model, prompt, tool, or orchestration configuration changes.
+Shadow Testing
+Execute a new agent version on mirrored requests without allowing it to perform production mutations.
+Canary Deployment
+Route a small controlled cohort to the new agent version and compare quality, safety, and latency.
+Observability
+Instrument agents with OpenTelemetry traces, metrics, and structured logs.
+OpenTelemetry
+Propagate trace context across FastAPI, ADK agents, model calls, and MCP services.
+Distributed Tracing
+Link supervisor, specialist, model, policy, and tool spans under one trace ID.
+p50 Latency
+Track the median duration of completed campaign-analysis workflows.
+p95 Latency
+Measure the duration below which 95% of workflow executions complete.
+p99 Latency
+Investigate the slowest 1% of executions for provider throttling, queue delay, and tool bottlenecks.
+SLI
+Measure the proportion of campaign-analysis workflows completing successfully.
+SLO
+Define a target such as 99% successful completion for a specified workflow class.
+Error Budget
+Use the permitted SLO failure allowance to decide whether risky releases should continue.
+Cost per Successful Task
+Divide total workflow execution cost by the number of correctly completed workflows.
+
+Example: Automated agent evaluation
+import pytest@pytest.mark.asyncioasync def test_campaign_eligibility():    result = await run_campaign_agent(        request="Recommend eligible customers",        test_dataset="campaign_001",    )    assert result["status"] == "COMPLETED"    assert result["unauthorized_actions"] == 0    assert result["eligibility_violations"] == 0    assert result["approval_required"] is True
+This assumes a test harness exposing run_campaign_agent. In a real evaluation suite, I would also test model failures, incorrect tool selection, prompt injection, latency, and recovery behavior.
+8. Infrastructure, Deployment & Platform Engineering
+Technical term
+Practical implementation example
+AWS Bedrock
+Configure approved model access through Bedrock for campaign-analysis and recommendation agents.
+ECS
+Deploy containerized FastAPI and agent-worker services using ECS task definitions.
+EKS
+Run agent services on Kubernetes when custom scheduling or Kubernetes-native integrations justify it.
+Fargate
+Execute containerized agents without directly managing EC2 worker instances.
+Aurora PostgreSQL
+Persist sessions, workflow checkpoints, approval records, and agent configuration versions.
+Infrastructure as Code
+Store cloud infrastructure definitions in Git and deploy them through automated pipelines.
+Terraform
+Provision VPCs, IAM roles, ECS services, queues, and databases from version-controlled modules.
+CI/CD
+Use Jenkins to run code tests, security scans, agent evaluations, and controlled deployments.
+Progressive Delivery
+Promote an agent from evaluation to shadow testing, canary, and general production rollout.
+Configuration Registry
+Store versioned YAML configurations for model selection, agent tools, budgets, and execution policies.
+Internal Developer Platform
+Provide a CLI that generates a new agent project with authentication, telemetry, testing, and deployment templates.
+Paved Road
+Publish an approved agent SDK so teams reuse standardized runtime and governance components.
+Autoscaling
+Increase execution-worker capacity based on queue age, active tasks, and downstream quotas.
+Queue-Based Scaling
+Use SQS queue depth and oldest-message age to inform worker scaling decisions.
+Multi-Region Deployment
+Run regionally isolated execution services with controlled failover and data-residency rules.
+Sandbox Isolation
+Execute untrusted AI-generated code inside restricted containers with resource and network limits.
+Emergency Shutdown
+Disable a compromised agent version or mutation capability through centrally enforced configuration.
+Rollback
+Restore the previous validated prompt, model, and agent configuration after a failed canary.
+
+9. Atlassian Enterprise AI Integration
+Technical term
+Practical implementation example
+Jira Agent
+Implement an agent that creates an issue after validating project permissions and required fields.
+Confluence Agent
+Retrieve permission-filtered Confluence pages and summarize release documentation with citations.
+Rovo-Style Assistant
+Combine authorized Jira issues and Confluence documents to answer cross-product questions.
+Issue Triage
+Classify new Jira issues by category and urgency, then recommend assignment to the appropriate team.
+Release Risk Analysis
+Traverse issue dependencies and flag unresolved blockers affecting an upcoming release.
+Incident Agent
+Correlate monitoring alerts, recent deployments, and runbooks to suggest incident causes.
+Agent Marketplace
+Build a registry UI showing agent capabilities, owners, versions, evaluation status, and allowed scopes.
+Third-Party Agents
+Integrate external agents through versioned contracts, scoped credentials, and auditable execution.
+Jira Workflow Transition
+Validate issue status and actor permissions before invoking an authorized transition API.
+Enterprise Search
+Search Jira and Confluence with source-specific permissions preserved during retrieval.
+Permission-Aware Retrieval
+Filter search candidates using the initiating user's current resource permissions.
+Business Value Measurement
+Compare time spent producing release reports before and after introducing the AI assistant.
+
+10. Principal Engineer — Architecture & Leadership
+Technical term
+Practical implementation example
+System Design
+Define a reference architecture containing API, orchestration, model, retrieval, tool, policy, and state layers.
+Capacity Planning
+Estimate peak workflows, model token throughput, worker concurrency, and external API quotas before deployment.
+Incident Response
+Disable unsafe campaign mutations, preserve evidence, identify affected workflows, and coordinate recovery.
+Root Cause Analysis
+Trace an unauthorized action to a missing policy check and implement a regression test preventing recurrence.
+Build vs Buy
+Compare Google ADK and LangGraph against custom orchestration based on durability, integration, and operating cost.
+Architecture Decision Record
+Document why ECS Fargate was selected over EKS, including assumptions and trade-offs.
+Technical Leadership
+Establish shared AI platform contracts and lead cross-team architecture reviews.
+Stakeholder Alignment
+Agree on business outcomes, delivery risks, and approval responsibilities with product, security, and engineering teams.
+Technical Debt
+Replace duplicated authentication and retry logic across agents with a maintained platform SDK.
+Risk Prioritization
+Prioritize fixing unauthorized tool access over adding nonessential agent features.
+Platform Roadmap
+Sequence identity, durable execution, evaluation, governed actions, and developer self-service over planned releases.
+Reference Architecture
+Publish a standard architecture that engineering teams can adapt for new enterprise agents.
+Production Readiness
+Require security testing, load testing, evaluation, runbooks, monitoring, and rollback before launch.
+Engineering Trade-Off
+Compare a single-agent design against a multi-agent design using correctness, latency, cost, and complexity.
+Principal Engineer Ownership
+Own cross-team architectural direction and production reliability outcomes while enabling teams to deliver independently.
+
+How to explain an implementation in an interview
+For Principal Engineer interviews, a definition alone is rarely enough. Use the same four-part explanation for each term:
+What: Define the concept.
+How: Explain the component, framework, API, or algorithm used.
+Why: Justify the engineering choice against alternatives.
+Validation: Explain how you test correctness, security, scalability, and reliability.
+For example, when asked about durable agent execution, you could say:
+"I would implement durable execution using a PostgreSQL workflow store, explicit state transitions, and queue-based workers. Every completed step would be checkpointed. If a worker crashes, another worker would recover the workflow, reconcile uncertain external actions, and resume unfinished work. I would validate the design using fault-injection tests that terminate workers before and after external tool calls."
+This demonstrates architecture, implementation, failure handling, and validation in one answer.
+The attached document emphasizes these production engineering dimensions throughout its 100 questions. The examples above expand its concepts into concrete implementation approaches, with the strongest interview focus on MCP/A2A integration, durable execution, PDP/PEP governance, multi-agent evaluation, and platform scalability.
+
+======
+Agentic samples to create:
+
+https://chatgpt.com/s/t_6ae1592d9cec8191a69c3b3e1243133d
+
+
+
+
+
+
