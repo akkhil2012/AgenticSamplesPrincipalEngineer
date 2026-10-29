@@ -1,0 +1,4 @@
+{
+  "action": "disburse_loan",
+  "application": {"customer_id": "C101", "loan_amount": 300000, "credit_score": 750}
+}

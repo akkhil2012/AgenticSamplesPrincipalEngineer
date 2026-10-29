@@ -1,0 +1,8 @@
+{
+  "expected_active_version": "1.1",
+  "configuration": {
+    "version": "2.0", "enabled": true, "minimum_credit_score": 800,
+    "maximum_loan_amount": 500000, "allowed_actions": ["evaluate", "recommend"],
+    "requires_human_approval": true
+  }
+}

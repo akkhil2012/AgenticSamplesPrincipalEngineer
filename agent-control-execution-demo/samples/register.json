@@ -1,0 +1,14 @@
+{
+  "agent_id": "loan-agent-001",
+  "name": "LoanApprovalAgent",
+  "version": "1.0",
+  "capabilities": ["evaluate", "recommend"],
+  "configuration": {
+    "version": "1.0",
+    "enabled": true,
+    "minimum_credit_score": 700,
+    "maximum_loan_amount": 500000,
+    "allowed_actions": ["evaluate", "recommend"],
+    "requires_human_approval": true
+  }
+}
