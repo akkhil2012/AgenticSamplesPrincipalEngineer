@@ -1,0 +1,11 @@
+{
+  "id": "exclusion",
+  "tenant": "bank-b",
+  "version": 1,
+  "active": true,
+  "valid_until": "2099-12-31",
+  "text": "Customer exclusion blocks restricted accounts from campaigns.",
+  "rules": {
+    "excluded_allowed": false
+  }
+}

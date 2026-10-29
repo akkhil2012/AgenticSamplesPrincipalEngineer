@@ -1,0 +1,24 @@
+name: Agentic platform demo
+on:
+  push:
+    branches: [AgenticPlatformVsChatBOT]
+    paths: ['enterprise-agentic-vs-chatbot/**', '.github/workflows/agentic-platform.yml']
+  pull_request:
+    paths: ['enterprise-agentic-vs-chatbot/**', '.github/workflows/agentic-platform.yml']
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: enterprise-agentic-vs-chatbot
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: make install
+      - run: make seed
+      - run: make lint
+      - run: make test

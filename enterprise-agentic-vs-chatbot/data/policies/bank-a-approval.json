@@ -1,0 +1,11 @@
+{
+  "id": "approval",
+  "tenant": "bank-a",
+  "version": 1,
+  "active": true,
+  "valid_until": "2099-12-31",
+  "text": "Campaign approval requires independent authorized human approval before simulated activation.",
+  "rules": {
+    "independent": true
+  }
+}

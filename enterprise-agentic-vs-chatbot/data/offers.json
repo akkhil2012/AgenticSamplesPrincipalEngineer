@@ -1,0 +1,26 @@
+[
+  {
+    "tenant": "bank-a",
+    "id": "bank-a-premium-upgrade",
+    "segment": "premium",
+    "description": "Annual fee waiver"
+  },
+  {
+    "tenant": "bank-a",
+    "id": "bank-a-standard-upgrade",
+    "segment": "standard",
+    "description": "Bonus rewards"
+  },
+  {
+    "tenant": "bank-b",
+    "id": "bank-b-premium-upgrade",
+    "segment": "premium",
+    "description": "Annual fee waiver"
+  },
+  {
+    "tenant": "bank-b",
+    "id": "bank-b-standard-upgrade",
+    "segment": "standard",
+    "description": "Bonus rewards"
+  }
+]

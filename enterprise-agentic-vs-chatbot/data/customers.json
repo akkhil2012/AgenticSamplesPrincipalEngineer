@@ -1,0 +1,110 @@
+[
+  {
+    "id": "bank-a-c1",
+    "tenant": "bank-a",
+    "income": 90000,
+    "score": 780,
+    "consent": true,
+    "excluded": false,
+    "segment": "premium"
+  },
+  {
+    "id": "bank-a-c2",
+    "tenant": "bank-a",
+    "income": 90000,
+    "score": 780,
+    "consent": true,
+    "excluded": false,
+    "segment": "standard"
+  },
+  {
+    "id": "bank-a-c3",
+    "tenant": "bank-a",
+    "income": 90000,
+    "score": 780,
+    "consent": false,
+    "excluded": false,
+    "segment": "premium"
+  },
+  {
+    "id": "bank-a-c4",
+    "tenant": "bank-a",
+    "income": 90000,
+    "score": 780,
+    "consent": true,
+    "excluded": true,
+    "segment": "standard"
+  },
+  {
+    "id": "bank-a-c5",
+    "tenant": "bank-a",
+    "income": 25000,
+    "score": 780,
+    "consent": true,
+    "excluded": false,
+    "segment": "premium"
+  },
+  {
+    "id": "bank-a-c6",
+    "tenant": "bank-a",
+    "income": 90000,
+    "score": 590,
+    "consent": true,
+    "excluded": false,
+    "segment": "standard"
+  },
+  {
+    "id": "bank-b-c1",
+    "tenant": "bank-b",
+    "income": 90000,
+    "score": 780,
+    "consent": true,
+    "excluded": false,
+    "segment": "premium"
+  },
+  {
+    "id": "bank-b-c2",
+    "tenant": "bank-b",
+    "income": 90000,
+    "score": 780,
+    "consent": true,
+    "excluded": false,
+    "segment": "standard"
+  },
+  {
+    "id": "bank-b-c3",
+    "tenant": "bank-b",
+    "income": 90000,
+    "score": 780,
+    "consent": false,
+    "excluded": false,
+    "segment": "premium"
+  },
+  {
+    "id": "bank-b-c4",
+    "tenant": "bank-b",
+    "income": 90000,
+    "score": 780,
+    "consent": true,
+    "excluded": true,
+    "segment": "standard"
+  },
+  {
+    "id": "bank-b-c5",
+    "tenant": "bank-b",
+    "income": 25000,
+    "score": 780,
+    "consent": true,
+    "excluded": false,
+    "segment": "premium"
+  },
+  {
+    "id": "bank-b-c6",
+    "tenant": "bank-b",
+    "income": 90000,
+    "score": 590,
+    "consent": true,
+    "excluded": false,
+    "segment": "standard"
+  }
+]

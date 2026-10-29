@@ -1,0 +1,28 @@
+services:
+  api:
+    image: enterprise-agentic-demo:local
+    build: .
+    ports: ["8000:8000"]
+    environment:
+      DATABASE_URL: sqlite:////state/workflows.db
+      MODEL_NAME: ${MODEL_NAME:-mock}
+      DEMO_AUTH: "true"
+      APPROVAL_TTL_SECONDS: ${APPROVAL_TTL_SECONDS:-900}
+    volumes: ["workflow-state:/state"]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  dashboard:
+    image: enterprise-agentic-demo:local
+    build: .
+    command: ["streamlit", "run", "dashboard/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--browser.gatherUsageStats=false"]
+    environment:
+      API_BASE_URL: http://api:8000
+    ports: ["8501:8501"]
+    depends_on:
+      api:
+        condition: service_healthy
+volumes:
+  workflow-state:

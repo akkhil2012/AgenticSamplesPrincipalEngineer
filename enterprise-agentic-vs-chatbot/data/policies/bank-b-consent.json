@@ -1,0 +1,11 @@
+{
+  "id": "consent",
+  "tenant": "bank-b",
+  "version": 1,
+  "active": true,
+  "valid_until": "2099-12-31",
+  "text": "Marketing consent must be explicit; opted out customers cannot receive a campaign.",
+  "rules": {
+    "required": true
+  }
+}

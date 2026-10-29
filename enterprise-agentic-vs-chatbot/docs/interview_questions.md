@@ -1,0 +1,21 @@
+# Ten-minute Principal Engineer walkthrough
+
+**0:00–1:00 — Why more than a chatbot?** Send the same campaign request to both panels. The baseline answers; the platform reads synthetic enterprise records, applies policy, creates a reviewable draft and persists business state. The distinction is delegated execution with controls, not the number of model calls. Production chatbots can adopt the same capabilities.
+
+**1:00–2:00 — Why multiple agents?** Customer eligibility, engagement, offer selection, compliance and campaign preparation have distinct contracts and tool permissions. Engagement and offers can run concurrently once eligibility completes. This small demo could be one workflow; ADK decomposition demonstrates replaceable capabilities and ownership boundaries. Extra agents are not inherently more accurate.
+
+**2:00–3:00 — What belongs to the orchestrator?** Interpret intent, choose the explicit plan, coordinate ADK SequentialAgent/ParallelAgent, persist validated outputs, track status, and escalate failures to safe retry or human review. It must not invent authorization or bypass specialist contracts. The model gateway gives optional probabilistic interpretation; mandatory gates are Python transitions and policy code.
+
+**3:00–4:00 — Deterministic controls around probabilistic reasoning.** Users can ask to include opt-outs or activate immediately, but consent/exclusion filters and the activation PDP still apply. An approval is not prose in a model reply: it is a database record with approver, tenant, exact hash and expiry. Current customer rules and policy versions are checked again at activation.
+
+**4:00–5:00 — How are business tools secured?** The API derives identity/tenant from token lookup. Agents have fixed tool allowlists. Every business tool goes through PEP/PDP before its implementation. Tenant checks occur at both API resource lookup and gateway fixture lookup. No raw Python execution sandbox is claimed; trusted in-process code is the boundary. Production needs OIDC and service identities.
+
+**5:00–6:00 — Persistence and recovery.** SQLite records workflows, checkpoints, drafts, approvals and audit. CREATED commits before analysis; APPROVED commits before execution. Handled failures commit FAILED plus safe outputs. Hard crashes roll back the current transaction. Retrying reuses read analysis but reruns compliance, while unique keys and transactions prevent duplicate local campaigns. Remote effects need an outbox and downstream idempotency.
+
+**6:00–7:00 — Human accountability.** The requester cannot approve their own campaign, even if holding both roles. An independent approver reviews a hash-bound payload; expiry, tenant, role and payload integrity are revalidated immediately before execution. Audit records who requested, approved and executed under which agent/tool policy decision. Editable local audit is a demo limitation; use tamper-evident retention in production.
+
+**7:00–8:00 — Operational trade-offs.** Inspect audit timestamps, tool retry outcomes, model token/cost estimates and OTel spans. Retries are bounded at both operation and workflow layers. Mock fallback permits offline demonstrations but should be surfaced operationally; in regulated production some workloads should fail closed instead. SQLite writer serialization and synchronous request workers constrain throughput.
+
+**8:00–9:00 — Scale to 100 tenants.** Move state to PostgreSQL with migrations, row-level tenant isolation, per-tenant encryption/quotas and backup policy. Run workflow workers on a durable queue with leases, deadlines and idempotent activities. Establish tenant-aware model budgets, retrieval ACLs, signed policy releases, central telemetry and evidence retention. Choose pooled or dedicated infrastructure based on tenant risk and volume.
+
+**9:00–10:00 — Service extraction and production hardening.** Keep the modular monolith until independent scaling or ownership justifies extraction. Likely services: identity/API edge, workflow workers, model gateway, knowledge/policy service, governed tool adapters and audit pipeline. Separate the control plane from execution identities. Add policy regression suites, adversarial prompt evaluations, approval UX review, load/failover testing, reconciliation and documented incident response before connecting real banking tools.

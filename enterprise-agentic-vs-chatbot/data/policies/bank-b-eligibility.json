@@ -1,0 +1,12 @@
+{
+  "id": "eligibility",
+  "tenant": "bank-b",
+  "version": 1,
+  "active": true,
+  "valid_until": "2099-12-31",
+  "text": "Credit upgrade eligibility requires income and credit score thresholds.",
+  "rules": {
+    "min_income": 60000,
+    "min_score": 720
+  }
+}

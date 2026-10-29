@@ -1,0 +1,74 @@
+[
+  {
+    "tenant": "bank-a",
+    "customer_id": "bank-a-c1",
+    "sent": 10,
+    "clicks": 7
+  },
+  {
+    "tenant": "bank-a",
+    "customer_id": "bank-a-c2",
+    "sent": 10,
+    "clicks": 2
+  },
+  {
+    "tenant": "bank-a",
+    "customer_id": "bank-a-c3",
+    "sent": 10,
+    "clicks": 7
+  },
+  {
+    "tenant": "bank-a",
+    "customer_id": "bank-a-c4",
+    "sent": 10,
+    "clicks": 2
+  },
+  {
+    "tenant": "bank-a",
+    "customer_id": "bank-a-c5",
+    "sent": 10,
+    "clicks": 7
+  },
+  {
+    "tenant": "bank-a",
+    "customer_id": "bank-a-c6",
+    "sent": 10,
+    "clicks": 2
+  },
+  {
+    "tenant": "bank-b",
+    "customer_id": "bank-b-c1",
+    "sent": 10,
+    "clicks": 7
+  },
+  {
+    "tenant": "bank-b",
+    "customer_id": "bank-b-c2",
+    "sent": 10,
+    "clicks": 2
+  },
+  {
+    "tenant": "bank-b",
+    "customer_id": "bank-b-c3",
+    "sent": 10,
+    "clicks": 7
+  },
+  {
+    "tenant": "bank-b",
+    "customer_id": "bank-b-c4",
+    "sent": 10,
+    "clicks": 2
+  },
+  {
+    "tenant": "bank-b",
+    "customer_id": "bank-b-c5",
+    "sent": 10,
+    "clicks": 7
+  },
+  {
+    "tenant": "bank-b",
+    "customer_id": "bank-b-c6",
+    "sent": 10,
+    "clicks": 2
+  }
+]
