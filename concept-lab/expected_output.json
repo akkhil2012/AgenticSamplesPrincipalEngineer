@@ -1,0 +1,11 @@
+{
+  "result": {
+    "status": "ok"
+  },
+  "audit": [
+    {
+      "reference": "service-token",
+      "operation": "service_call"
+    }
+  ]
+}
