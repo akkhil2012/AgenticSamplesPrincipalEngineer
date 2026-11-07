@@ -1,0 +1,13 @@
+{
+  "run": {
+    "identity": "alice",
+    "policy_decision": "allow@v3",
+    "approval": "a1",
+    "execution": "ticket-closed",
+    "review_owner": "bob"
+  },
+  "missing": [],
+  "evidence_complete": true,
+  "checksum": "b05aa27ff5c7647019163a52efc8ff9627400dbce0718c1380ba7b741b6279fc",
+  "assessment": "Evidence inventory only; requires control review"
+}
