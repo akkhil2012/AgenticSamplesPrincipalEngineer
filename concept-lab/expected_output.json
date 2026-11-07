@@ -1,0 +1,23 @@
+{
+  "result": {
+    "trace": "f7c590f1-cc6e-4678-aead-5ede4b907df3",
+    "status": "completed"
+  },
+  "events": [
+    {
+      "trace": "f7c590f1-cc6e-4678-aead-5ede4b907df3",
+      "event": "proposed",
+      "action": "read"
+    },
+    {
+      "trace": "f7c590f1-cc6e-4678-aead-5ede4b907df3",
+      "event": "policy",
+      "allowed": true
+    },
+    {
+      "trace": "f7c590f1-cc6e-4678-aead-5ede4b907df3",
+      "event": "executed",
+      "result": "ok"
+    }
+  ]
+}
