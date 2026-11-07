@@ -1,0 +1,16 @@
+{
+  "active": {
+    "session": [
+      "hello"
+    ],
+    "preferences": {
+      "language": "English"
+    }
+  },
+  "after_ttl": {
+    "session": [],
+    "preferences": {
+      "language": "English"
+    }
+  }
+}
