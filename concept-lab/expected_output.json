@@ -1,0 +1,18 @@
+{
+  "parent": "supervisor",
+  "lookup": {
+    "agent": "lookup",
+    "value": 3
+  },
+  "children": [
+    {
+      "agent": "sales",
+      "value": 6
+    },
+    {
+      "agent": "support",
+      "value": 4
+    }
+  ],
+  "total": 10
+}
