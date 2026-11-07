@@ -1,0 +1,34 @@
+{
+  "discovery": {
+    "tools": [
+      {
+        "name": "add",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "a": {
+              "type": "integer"
+            },
+            "b": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "a",
+            "b"
+          ],
+          "additionalProperties": false
+        }
+      }
+    ]
+  },
+  "call": {
+    "content": [
+      {
+        "type": "text",
+        "text": "5"
+      }
+    ],
+    "isError": false
+  }
+}
