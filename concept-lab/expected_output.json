@@ -1,0 +1,7 @@
+{
+  "tenant": "a",
+  "task_id": "w1",
+  "aggregate": {
+    "count": 5
+  }
+}
