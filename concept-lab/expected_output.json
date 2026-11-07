@@ -1,0 +1,9 @@
+{
+  "fixed": [
+    "done:lookup",
+    "done:summarize"
+  ],
+  "planned": [
+    "done:lookup"
+  ]
+}
