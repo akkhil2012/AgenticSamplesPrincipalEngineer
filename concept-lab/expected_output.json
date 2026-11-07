@@ -1,0 +1,6 @@
+{
+  "success_rate": 0.5,
+  "p95_ms": 300,
+  "cost_per_success": 3.0,
+  "delegations_per_run": 2.5
+}
