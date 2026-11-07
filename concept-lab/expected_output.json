@@ -1,0 +1,16 @@
+{
+  "chatbot": "I can explain ticket closure; no action was executed.",
+  "platform": {
+    "ticket": "INC-7",
+    "status": "closed"
+  },
+  "audit": [
+    {
+      "action": "close_ticket",
+      "result": {
+        "ticket": "INC-7",
+        "status": "closed"
+      }
+    }
+  ]
+}
