@@ -1,0 +1,7 @@
+{
+  "action": {
+    "ticket": "INC-7",
+    "operation": "close"
+  },
+  "accountable_reviewer": "bob"
+}
