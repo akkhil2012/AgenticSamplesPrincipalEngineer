@@ -1,0 +1,14 @@
+[
+  {
+    "value": "cached",
+    "degraded": true
+  },
+  {
+    "value": "cached",
+    "degraded": true
+  },
+  {
+    "value": "live",
+    "degraded": false
+  }
+]
