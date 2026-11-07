@@ -1,0 +1,5 @@
+{
+  "resource": "t1",
+  "action": "read",
+  "on_behalf_of": "alice"
+}
