@@ -1,0 +1,12 @@
+{
+  "result": {
+    "ticket": "INC-7",
+    "status": "open"
+  },
+  "trace": [
+    "validated",
+    "routed",
+    "authorized",
+    "executed"
+  ]
+}
