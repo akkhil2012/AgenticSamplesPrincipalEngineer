@@ -1,0 +1,19 @@
+{
+  "first": {
+    "results": {
+      "sales": 10
+    },
+    "failures": {
+      "support": "retryable"
+    },
+    "status": "partial"
+  },
+  "recovered": {
+    "results": {
+      "sales": 10,
+      "support": 3
+    },
+    "failures": {},
+    "status": "completed"
+  }
+}
