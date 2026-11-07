@@ -1,0 +1,20 @@
+{
+  "state": "completed",
+  "answer": "ticket open",
+  "events": [
+    {
+      "step": 0,
+      "proposal": {
+        "kind": "tool",
+        "tool": "status"
+      }
+    },
+    {
+      "step": 1,
+      "proposal": {
+        "kind": "answer",
+        "text": "ticket open"
+      }
+    }
+  ]
+}
