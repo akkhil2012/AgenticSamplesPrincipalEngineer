@@ -1,0 +1,7 @@
+{
+  "before": {
+    "version": 1,
+    "tool": "read"
+  },
+  "after": "revoked"
+}
