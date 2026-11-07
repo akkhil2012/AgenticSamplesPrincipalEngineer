@@ -1,0 +1,11 @@
+{
+  "subject": "alice",
+  "tenant": "a",
+  "scopes": [
+    "read"
+  ],
+  "actors": [
+    "supervisor",
+    "specialist"
+  ]
+}
