@@ -1,0 +1,9 @@
+{
+  "discovered": [
+    {
+      "name": "count",
+      "version": 1
+    }
+  ],
+  "after_revocation": "denied"
+}
