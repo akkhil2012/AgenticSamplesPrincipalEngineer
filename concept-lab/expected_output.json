@@ -1,0 +1,9 @@
+{
+  "graph_relationship": [
+    "project-x"
+  ],
+  "vector_similarity": [
+    "project-x",
+    "project-y"
+  ]
+}
