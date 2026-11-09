@@ -1,22 +1,21 @@
-# Task 42: tenantrag multi tenant enterprise rag platform — Architecture
+# Architecture: tenantrag multi tenant enterprise rag platform
+
+This is an **explanatory architecture view** of the engineering concept. Some components are conceptual and are not necessarily separately deployed or implemented by the small offline Python lab. Refer to [main.py](../concept-lab/main.py) and [the tests](../concept-lab/test_main.py) for the precise executable behavior.
 
 ```mermaid
 flowchart LR
- A["Synthetic input"] --> B["tenantrag multi tenant enterprise rag platform"]
- B --> C["Validation and demo logic"]
- C --> D["Result"]
- C -. "Failure / invalid case" .-> E["Reject or handle"]
- D --> F["Tests and expected output"]
+ A["Tenant request"] --> I["Tenant identity / context"]
+ I --> F["Tenant-scoped retrieval filter"]
+ K["Document index with tenant metadata"] --> F
+ F --> R["Authorized matching chunks"]
+ R --> O["Grounded response"]
+ F -. "Cross-tenant match" .-> X["Exclude"]
 ```
 
-**Scope:** This shows a logical in-process concept lab, not a deployed enterprise topology.
+## Reading the diagram
 
-## Demonstrated behavior
+The solid arrows show the main logical flow. Decision nodes identify the boundary where an action is approved, denied, filtered, or retried. In a real enterprise deployment, these logical responsibilities may run in separate services, but the sample lab generally uses in-process Python objects.
 
-Apply tenant and document ACL filters before ranking retrieval results.
+## Verify the implementation
 
-## Limits
-
-Lexical ranking stands in for vector retrieval; production must derive identity from authentication and apply ACLs to vector search, caches, and generated citations.
-
-See [the implementation](../concept-lab/main.py) and [tests](../concept-lab/test_main.py) for exact behavior.
+Run `python3 main.py` and `python3 -m unittest -v` inside `concept-lab/`. The architecture diagram illustrates the concept; the tests and code establish what this branch actually demonstrates.
