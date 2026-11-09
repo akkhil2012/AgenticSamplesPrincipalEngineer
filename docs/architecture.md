@@ -1,22 +1,22 @@
-# Task 39: durableagent database backed workflow state and recovery — Architecture
+# Architecture: durableagent database backed workflow state and recovery
+
+This is an **explanatory architecture view** of the engineering concept. Some components are conceptual and are not necessarily separately deployed or implemented by the small offline Python lab. Refer to [main.py](../concept-lab/main.py) and [the tests](../concept-lab/test_main.py) for the precise executable behavior.
 
 ```mermaid
-flowchart LR
- A["Synthetic input"] --> B["durableagent database backed workflow state and recovery"]
- B --> C["Validation and demo logic"]
- C --> D["Result"]
- C -. "Failure / invalid case" .-> E["Reject or handle"]
- D --> F["Tests and expected output"]
+flowchart TD
+ A["Workflow request"] --> B["Persist state / checkpoint"]
+ B --> C["Execute next step"]
+ C --> D{"Step succeeds?"}
+ D -->|Yes| E["Save progress"]
+ D -->|Failure| F["Load last checkpoint"]
+ F --> C
+ E --> G["Complete workflow"]
 ```
 
-**Scope:** This shows a logical in-process concept lab, not a deployed enterprise topology.
+## Reading the diagram
 
-## Demonstrated behavior
+The solid arrows show the main logical flow. Decision nodes identify the boundary where an action is approved, denied, filtered, or retried. In a real enterprise deployment, these logical responsibilities may run in separate services, but the sample lab generally uses in-process Python objects.
 
-Use durable SQLite step records to resume a workflow and skip already committed local steps.
+## Verify the implementation
 
-## Limits
-
-Checkpoints follow function completion. External side effects can repeat after a crash before checkpoint; use idempotency/outbox and worker leases.
-
-See [the implementation](../concept-lab/main.py) and [tests](../concept-lab/test_main.py) for exact behavior.
+Run `python3 main.py` and `python3 -m unittest -v` inside `concept-lab/`. The architecture diagram illustrates the concept; the tests and code establish what this branch actually demonstrates.
