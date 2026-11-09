@@ -1,24 +1,26 @@
-# Task 03 architecture: control plane vs execution plane
+# Architecture: control plane vs execution plane
 
-**Scope:** This is a diagram of the local concept lab, not a diagram of deployed microservices.
+This is an **explanatory architecture view** of the engineering concept. Some components are conceptual and are not necessarily separately deployed or implemented by the small offline Python lab. Refer to [main.py](../concept-lab/main.py) and [the tests](../concept-lab/test_main.py) for the precise executable behavior.
 
 ```mermaid
 flowchart LR
- A["Example input"] --> B["validate input"]
- B --> C["check policy"]
- C --> D["return result"]
- D --> E["Result / evidence"]
- B -. "Invalid or denied" .-> F["Reject / error"]
+ subgraph CP["Control plane"]
+  C["Versioned agent definition"] --> P["Published tool allowlist"]
+  R["Live revocation list"]
+ end
+ subgraph EP["Execution plane"]
+  Q["Request: version + tool"] --> A{"Tool allowed and not revoked?"}
+  A -->|Yes| X["Return execution decision"]
+  A -->|No| D["PermissionError"]
+ end
+ P --> A
+ R --> A
 ```
 
-## Plain-English walkthrough
+## Reading the diagram
 
-Publish immutable configuration versions while checking live revocation at execution time.
+The solid arrows show the main logical flow. Decision nodes identify the boundary where an action is approved, denied, filtered, or retried. In a real enterprise deployment, these logical responsibilities may run in separate services, but the sample lab generally uses in-process Python objects.
 
-The code in [main.py](../concept-lab/main.py) demonstrates this with local synthetic inputs. Follow `demo()` to see how the flow is exercised, and inspect [the tests](../concept-lab/test_main.py) to understand the rejection paths.
+## Verify the implementation
 
-## Production considerations
-
-In-memory configuration distribution; production requires authenticated publication, durable versions, and revocation availability handling.
-
-Do not interpret the boxes as independent network services or real model integrations unless separately implemented.
+Run `python3 main.py` and `python3 -m unittest -v` inside `concept-lab/`. The architecture diagram illustrates the concept; the tests and code establish what this branch actually demonstrates.
