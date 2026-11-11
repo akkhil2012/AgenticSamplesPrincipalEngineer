@@ -35,3 +35,7 @@ python3 -m unittest -v
 **Production extension:** The amount cap is per action. Production also needs cumulative limits, authenticated identity, idempotency, and concurrency control. I would integrate a policy decision service, real tool adapters, identity propagation, and audit logging where appropriate.
 
 **Interview takeaway:** Model reasoning can be probabilistic, but authorization and safety boundaries must be deterministic.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
