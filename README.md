@@ -37,3 +37,7 @@ Python 3.11+ is required; no external API keys are needed for this concept lab. 
 **Production considerations:** Local single-worker counters; production needs atomic reservations, durable accounting, authenticated scopes, and idempotent tool dispatch. I would introduce real integrations, identity, state management, monitoring, and recovery testing according to the deployment requirements.
 
 **Interview takeaway:** This is how I would explain leastagency least privilege and least agency enforcement: show the behavior, identify the enforced boundary, and discuss the production trade-offs.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
