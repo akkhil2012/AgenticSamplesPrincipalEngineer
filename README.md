@@ -45,3 +45,7 @@ Python 3.11+ is needed. The concept lab requires no paid model or API key. See [
 Two illustrative cases, not sufficient release coverage. Add held-out domain, adversarial, latency, cost, and subgroup evaluations. Depending on the scenario, I would add real integrations, authenticated identities, persistence, observability, and recovery tests.
 
 **Interview takeaway:** I can explain reproducible evaluation before promotion with a concrete example and discuss the trade-offs between a teaching demo and a deployable enterprise solution.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
