@@ -33,3 +33,7 @@ python3 -m unittest -v
 ```
 
 **Production considerations:** A local capability object, not a signed bearer credential; counters need atomic storage across workers. I would integrate a trusted identity provider, centralized authorization policies, audited tool execution, and adversarial testing before production use.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
