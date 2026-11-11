@@ -1,0 +1,9 @@
+quote_id,category,product,supplier,unit_price,currency,available_units,lead_days,region,certifications,quoted_on
+Q-101,laptop,Business laptop 16GB 512GB,Northstar Devices,780,USD,90,7,US,ISO9001;EPEAT Gold,2026-11-01
+Q-102,laptop,Business laptop 16GB 512GB,Harbor Computing,725,USD,160,18,US,ISO9001,2026-11-01
+Q-103,laptop,Business laptop 16GB 512GB,Evergreen Systems,835,USD,120,10,US,ISO9001;EPEAT Gold,2026-11-01
+Q-104,laptop,Business laptop 32GB 1TB,Northstar Devices,1120,USD,55,12,US,ISO9001;EPEAT Gold,2026-11-01
+Q-105,monitor,27 inch QHD monitor,Harbor Computing,235,USD,240,6,US,ISO9001,2026-11-01
+Q-106,monitor,27 inch QHD monitor,Evergreen Systems,260,USD,180,9,US,ISO9001;EPEAT Gold,2026-11-01
+Q-107,dock,USB-C dual display dock,Northstar Devices,145,USD,200,5,US,ISO9001,2026-11-01
+Q-108,laptop,Business laptop 16GB 512GB,Meridian IT,695,EUR,200,14,EU,ISO9001;EPEAT Gold,2026-11-01

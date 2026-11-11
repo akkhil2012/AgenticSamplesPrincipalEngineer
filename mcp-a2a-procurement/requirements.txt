@@ -1,0 +1,9 @@
+# Versions used for protocol and browser validation.
+a2a-sdk[http-server]==0.3.26
+mcp==1.30.0
+openai==2.54.0
+streamlit==1.67.0
+python-dotenv==1.2.4
+httpx==0.28.1
+uvicorn==0.54.0
+jsonschema==4.26.0
