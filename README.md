@@ -50,3 +50,7 @@ The concept lab uses Python 3.11+ and does not require model API keys. See the [
 The injected model is deterministic. Real inference, durable checkpoints, cancellation, and transport are extension points. I would add real authenticated adapters, monitoring, recovery, and operational testing where the use case requires them.
 
 **My takeaway:** essential components of an agent runtime is easier to evaluate when we can demonstrate the happy path and the boundary conditions in executable code.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
