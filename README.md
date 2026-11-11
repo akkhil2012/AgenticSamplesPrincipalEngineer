@@ -45,3 +45,7 @@ Python 3.11+ is needed. The concept lab requires no paid model or API key. See [
 Structured local events are not a durable or tamper-evident audit sink; production requires retention, access controls, and export. Depending on the scenario, I would add real integrations, authenticated identities, persistence, observability, and recovery tests.
 
 **Interview takeaway:** I can explain observable decisions and auditable actions with a concrete example and discuss the trade-offs between a teaching demo and a deployable enterprise solution.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
