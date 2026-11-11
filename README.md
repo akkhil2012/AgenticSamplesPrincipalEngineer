@@ -37,3 +37,7 @@ Python 3.11+ is required; no external API keys are needed for this concept lab. 
 **Production considerations:** Async tasks share a process and use scripted results; production needs per-child budgets, timeouts, identity, and partial-failure semantics. I would introduce real integrations, identity, state management, monitoring, and recovery testing according to the deployment requirements.
 
 **Interview takeaway:** This is how I would explain sequential parallel and hierarchical agent orchestration: show the behavior, identify the enforced boundary, and discuss the production trade-offs.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
