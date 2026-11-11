@@ -46,3 +46,7 @@ Requires Python 3.11+. For the concept lab, no model API key is needed. Read [th
 In-memory configuration distribution; production requires authenticated publication, durable versions, and revocation availability handling. Before calling this production-ready, I would evaluate authentication, persistence, operational monitoring, failure recovery, and performance requirements.
 
 **Interview takeaway:** This branch makes **control plane vs execution plane** tangible through executable Python and testable boundaries.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
