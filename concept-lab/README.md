@@ -4,7 +4,7 @@ Compute task success, latency percentile, cost per success, and delegation overh
 
 ## Run locally
 
-Requires Python 3.11 or newer. No third-party packages, API keys, network calls, or paid model services.
+Requires Python 3.11 or newer. The command-line lab needs no third-party packages, API keys, network calls, or paid model services.
 
 ```bash
 git clone https://github.com/akkhil2012/AgenticSamplesPrincipalEngineer.git
@@ -45,3 +45,18 @@ This is an educational implementation, not a production security product. Extend
 ## Verification
 
 The demo and the tests in this folder passed with Python 3.12.14. UUID values in audit traces can differ between runs.
+
+## Streamlit UI
+
+From `concept-lab`, install the optional UI dependency and launch:
+
+```bash
+python3 -m pip install -r requirements-ui.txt
+python3 -m streamlit run streamlit_app.py
+```
+
+The UI runs this branch's demo, displays its JSON result and expected example,
+and lets you select an individual boundary test or run the whole suite. The guide
+and implementation are available alongside the results. Demo and test runs use
+fresh Python processes with a 30-second limit, so state does not persist across
+runs. The UI uses the same offline synthetic fixtures as the command-line lab.
