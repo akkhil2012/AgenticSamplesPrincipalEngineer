@@ -41,3 +41,7 @@ Requires Python 3.11+. For the concept lab, no model API key is needed. Read [th
 The chatbot and intent are scripted. A production platform needs authenticated callers, durable state, and real tool adapters. Before calling this production-ready, I would evaluate authentication, persistence, operational monitoring, failure recovery, and performance requirements.
 
 **Interview takeaway:** This branch makes **enterprise agentic ai platform vs chatbot** tangible through executable Python and testable boundaries.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
