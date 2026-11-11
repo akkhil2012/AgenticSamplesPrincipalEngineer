@@ -37,3 +37,7 @@ Python 3.11+ is required; no external API keys are needed for this concept lab. 
 **Production considerations:** In-memory tool metadata. Production needs signed manifests, schema review, tenant allowlists, provenance, and catalog refresh rules. I would introduce real integrations, identity, state management, monitoring, and recovery testing according to the deployment requirements.
 
 **Interview takeaway:** This is how I would explain dynamic tool discovery and governance: show the behavior, identify the enforced boundary, and discuss the production trade-offs.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
