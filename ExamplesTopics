@@ -1,0 +1,154 @@
+# AgenticSamplesPrincipalEngineer — Branch-wise Topic Catalog
+
+I checked your [GitHub repository](https://github.com/akkhil2012/AgenticSamplesPrincipalEngineer?utm_source=chatgpt.com) and found 61 branches, including 58 numbered `task-` branches.
+
+The 58 branches form a structured curriculum for AI Principal Engineer and AI Architect interviews, covering enterprise architecture, orchestration, MCP/A2A, memory, RAG, security, and governance.
+
+Below, I've organized them by topic. The explanations describe what each branch is intended to teach based on its branch name; they do not yet establish which concepts are fully implemented in its code.
+
+## 1. Enterprise AI platform architecture
+
+Branches task-01 to task-17 · 17 topics
+
+| Branch                                                                                                                                                 | Topic explained                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- |
+| [task-01](https://github.com/akkhil2012/AgenticSamplesPrincipalEngineer/tree/task-01-enterprise-agentic-ai-platform-vs-chatbot?utm_source=chatgpt.com) | Enterprise agentic AI platform vs. chatbot — architecture, autonomy, and platform capabilities |
+| task-02                                                                                                                                                | Designing an enterprise agentic AI platform from scratch                                       |
+| task-03                                                                                                                                                | Control plane vs. execution plane — separating configuration from runtime                      |
+| task-04                                                                                                                                                | Essential components of an agent runtime                                                       |
+| task-05                                                                                                                                                | Single-agent vs. multi-agent architecture — selection tradeoffs                                |
+| task-06                                                                                                                                                | Deterministic workflows vs. autonomous planning                                                |
+| task-07                                                                                                                                                | Typed contracts for A2A communication                                                          |
+| task-08                                                                                                                                                | Deterministic enforcement around probabilistic AI reasoning                                    |
+| task-09                                                                                                                                                | Least privilege and least agency principles                                                    |
+| task-10                                                                                                                                                | Durable workflow state and checkpointing                                                       |
+| task-11                                                                                                                                                | Isolation of planning and execution contexts                                                   |
+| task-12                                                                                                                                                | Latency, cost, and resource budgets                                                            |
+| task-13                                                                                                                                                | Observability, decision tracing, and auditability                                              |
+| task-14                                                                                                                                                | Reproducible evaluations as deployment gates                                                   |
+| task-15                                                                                                                                                | Graceful degradation and failure recovery                                                      |
+| task-16                                                                                                                                                | Versioned contracts and controlled deployment                                                  |
+| task-17                                                                                                                                                | Human accountability for consequential AI decisions                                            |
+
+Learning outcome: Understand how to design an AI platform that is scalable, governed, resilient, and production-ready.
+
+## 2. Multi-agent architecture and orchestration
+
+Branches task-18 to task-27 · 10 topics
+
+| Branch  | Topic explained                                                       |
+| ------- | --------------------------------------------------------------------- |
+| task-18 | Supervisor agent architecture — central coordination of domain agents |
+| task-19 | Sequential, parallel, and hierarchical orchestration                  |
+| task-20 | Preventing infinite loops between agents                              |
+| task-21 | Partial failure handling in multi-agent workflows                     |
+| task-22 | Planner–executor pattern — separating task planning from execution    |
+| task-23 | Reflection pattern — evaluating and refining agent outputs            |
+| task-24 | Human-in-the-loop approval workflows                                  |
+| task-25 | Agent registry — capability discovery and agent selection             |
+| task-26 | Context sharing between agents with controlled information exposure   |
+| task-27 | Measuring orchestration effectiveness, reliability, and efficiency    |
+
+Learning outcome: Design supervisor/harness agents, coordinate specialized agents, and control complex execution plans.
+
+## 3. MCP, A2A, and enterprise tool integration
+
+Branches task-28 to task-37 · 10 topics
+
+| Branch  | Topic explained                                          |
+| ------- | -------------------------------------------------------- |
+| task-28 | Model Context Protocol (MCP) fundamentals and value      |
+| task-29 | MCP vs. Agent-to-Agent (A2A) communication               |
+| task-30 | Enterprise MCP gateway architecture                      |
+| task-31 | Secure communication between autonomous agents           |
+| task-32 | Confused deputy problem in agentic AI                    |
+| task-33 | Two-level authorization across agent and tool boundaries |
+| task-34 | Safe retries and idempotency for MCP tools               |
+| task-35 | Dynamic tool discovery with governance                   |
+| task-36 | Defending against malicious tool responses               |
+| task-37 | MCP/A2A integration versioning and compatibility         |
+
+Learning outcome: Securely integrate tools and independent agents using enterprise-grade communication protocols.
+
+## 4. Agent state, memory, and enterprise RAG
+
+Branches task-38 to task-48 · 11 topics
+
+| Branch  | Topic explained                                                  |
+| ------- | ---------------------------------------------------------------- |
+| task-38 | AgentSession — enterprise session management                     |
+| task-39 | DurableAgent — database-backed workflow state and recovery       |
+| task-40 | MemoryAgent — short-term vs. long-term memory                    |
+| task-41 | ContextGuard — preventing LLM context-window overflow            |
+| task-42 | TenantRAG — multi-tenant enterprise RAG platform                 |
+| task-43 | FreshRAG — preventing stale knowledge from influencing decisions |
+| task-44 | GraphAgent — knowledge graphs vs. vector search                  |
+| task-45 | SharedMemory — centralized memory across multiple agents         |
+| task-46 | SafeSummary — secure conversational memory summarization         |
+| task-47 | VectorMigration — embedding model and vector-index migration     |
+| task-48 | SecureMemoryRAG — preventing cross-tenant data leakage           |
+
+Learning outcome: Build reliable, secure, persistent agent workflows and enterprise knowledge systems.
+
+## 5. AI security, identity, and governance
+
+Branches task-49 to task-58 · 10 topics
+
+| Branch  | Topic explained                                                  |
+| ------- | ---------------------------------------------------------------- |
+| task-49 | ZeroTrustAgent — zero-trust architecture for AI agents           |
+| task-50 | LeastAgency — enforcing least privilege and least agency         |
+| task-51 | IdentityChain — propagating user identity across agents          |
+| task-52 | PolicyGuard — PDP/PEP architecture and policy enforcement        |
+| task-53 | PromptShield — prompt-injection defense                          |
+| task-54 | AuditChain — tamper-evident audit logging                        |
+| task-55 | SecretGuard — secure secrets and credential management           |
+| task-56 | TenantShield — enterprise multi-tenant isolation                 |
+| task-57 | ProductionGuard — securing autonomous production modifications   |
+| task-58 | ComplianceAgent — demonstrating AI compliance and accountability |
+
+Learning outcome: Architect enterprise AI systems with identity propagation, authorization, isolation, auditability, and accountable autonomous execution.
+
+## 6. Additional branches
+
+| Branch                             | Apparent purpose                                                     |
+| ---------------------------------- | -------------------------------------------------------------------- |
+| `main`                             | Main/default development branch                                      |
+| `AgenticPlatformVsChatBOT`         | Comparison of enterprise agentic platforms and conventional chatbots |
+| `codex/streamlit-agent-runtime-ui` | Streamlit-based interface for an agent runtime                       |
+
+## Coverage summary
+
+58 numbered learning topics
+
+Across 5 domains
+
+Enterprise architecture
+
+17
+
+Multi-agent orchestration
+
+10
+
+MCP and A2A
+
+10
+
+Memory and RAG
+
+11
+
+Security and governance
+
+10
+
+## What I recommend studying first
+
+For your goal of moving into AI Principal Engineer, AI Architect, or Director-level roles, I would prioritize task-02, task-03, task-18, task-22, task-25, task-30, task-39, task-52, task-54, and task-58.
+
+Together, these cover platform architecture, stateless orchestration, agent discovery, durable execution, MCP governance, policy enforcement, and compliance. They also align closely with the stateless harness-agent architecture you've been developing.
+
+Important distinction: This is a verified inventory of branch names, with topic descriptions inferred from those names. It is not yet a code-level assessment of each branch's implementation completeness.
+
+&#x20;Analyze implementations in all 58 branches
