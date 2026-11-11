@@ -37,3 +37,7 @@ Python 3.11+ is required; no external API keys are needed for this concept lab. 
 **Production considerations:** Single-process compare-and-swap simulation; a shared service needs transactional CAS, authenticated tenant claims, schema controls, and access auditing. I would introduce real integrations, identity, state management, monitoring, and recovery testing according to the deployment requirements.
 
 **Interview takeaway:** This is how I would explain sharedmemory centralized memory service for multiple ai agents: show the behavior, identify the enforced boundary, and discuss the production trade-offs.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
