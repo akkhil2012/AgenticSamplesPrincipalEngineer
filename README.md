@@ -6,6 +6,17 @@ A minimal standard-library Python runtime demonstrating model invocation, govern
 
 See [the runnable project, architecture and walkthrough](minimal-agent-runtime/README.md).
 
+### Streamlit interface
+
+```bash
+python -m pip install -r minimal-agent-runtime/requirements-ui.txt
+python -m streamlit run minimal-agent-runtime/streamlit_app.py
+```
+
+Explore chat, demo identities, policy denials, conversation memory, and request
+execution in the [UI walkthrough](minimal-agent-runtime/README.md#streamlit-ui).
+No API key is required.
+
 ## Small offline concept lab
 
 task-04-essential-components-of-an-agent-runtime
