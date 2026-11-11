@@ -1,0 +1,2 @@
+# Optional interface; the CLI runtime still needs only the standard library.
+streamlit>=1.45,<2

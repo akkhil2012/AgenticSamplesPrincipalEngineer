@@ -2,7 +2,7 @@
 
 A bare-minimum, working Python agent runtime for a **Banking Account Balance Assistant**. It coordinates model reasoning, a mock banking tool, conversation memory, execution state, deterministic policy and JSON logs. All accounts and balances are synthetic.
 
-There is no framework, database or external service in the default path. The application uses only Python's standard library. `pytest` is the only test dependency.
+There is no framework, database or external service in the default path. The application uses only Python's standard library. `pytest` is the core test dependency. An optional Streamlit interface is available below.
 
 ## Run
 
@@ -26,6 +26,43 @@ python main.py > responses.txt 2> events.jsonl
 ```
 
 The authorized business response intentionally shows the balance. JSON logs omit balances, account IDs, prompts, credentials, conversation content and raw exception messages.
+
+## Streamlit UI
+
+Run the interactive banking assistant from the repository root:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r minimal-agent-runtime/requirements-ui.txt
+python -m streamlit run minimal-agent-runtime/streamlit_app.py
+```
+
+Open the local URL printed by Streamlit (normally http://localhost:8501).
+Select a demo user, try either account button, then ask “What was my previous
+question?”. The inspector shows each request's lifecycle, latency, actual tool
+call count, safe events, and successful conversation memory. Denied requests do
+not execute a tool or enter memory. The request selector lets you revisit earlier
+executions.
+
+The UI explicitly uses the deterministic mock even when `LLM_MODE` is set; the
+CLI retains the optional real-provider configuration below. No API key is needed.
+Each browser session owns its runtime in `st.session_state`; there is no shared
+runtime cache. Changing the demo user or clicking **New conversation** discards
+that browser session's runtime, chat, events, and memory. Data is in memory only
+and is lost when the session expires or the server restarts.
+
+The user selector is a teaching control, not authentication. Use synthetic data
+only; production deployment needs server-verified identity. Safe events exclude
+account IDs and balances; chat and conversation memory display authorized demo
+business content.
+
+To include UI tests, install both requirement files before running pytest:
+
+```bash
+python -m pip install -r minimal-agent-runtime/requirements.txt -r minimal-agent-runtime/requirements-ui.txt
+python -m pytest -q minimal-agent-runtime/tests
+```
 
 ## Test
 
@@ -245,6 +282,8 @@ In real mode, the configured provider receives the user prompt and prior session
 ```text
 minimal-agent-runtime/
 ├── main.py
+├── streamlit_app.py
+├── requirements-ui.txt
 ├── agent.py
 ├── model.py
 ├── tools.py
