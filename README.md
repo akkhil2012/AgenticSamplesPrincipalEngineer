@@ -50,3 +50,7 @@ The concept lab uses Python 3.11+ and does not require model API keys. See the [
 Local specialists simulate separate identities; this does not measure model quality or distributed orchestration overhead. I would add real authenticated adapters, monitoring, recovery, and operational testing where the use case requires them.
 
 **My takeaway:** single agent vs multi agent architecture is easier to evaluate when we can demonstrate the happy path and the boundary conditions in executable code.
+
+## Interactive UI
+
+See [concept-lab/README.md](concept-lab/README.md#streamlit-ui) for the optional Streamlit UI and launch instructions.
